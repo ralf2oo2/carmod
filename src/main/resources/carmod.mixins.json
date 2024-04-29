@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "net.glasslauncher.example.mixin",
+  "package": "ralf2oo2.carmod.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "ExampleMixin"

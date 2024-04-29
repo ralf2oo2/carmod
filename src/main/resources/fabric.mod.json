@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "examplemod",
+  "id": "carmod",
   "version": "${version}",
 
   "name": "Example Mod",
@@ -14,28 +14,23 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/examplemod/icon.png",
+  "icon": "assets/carmod/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "stationapi:event_bus": [
-      "net.glasslauncher.example.events.init.AchievementListener",
-      "net.glasslauncher.example.events.init.BlockListener",
-      "net.glasslauncher.example.events.init.ItemListener",
-      "net.glasslauncher.example.events.init.PlayerHandlerListener",
-      "net.glasslauncher.example.events.init.RecipeListener"
+      "ralf2oo2.carmod.Carmod",
+      "ralf2oo2.carmod.registry.EntityRegistry",
+      "ralf2oo2.carmod.registry.ItemRegistry"
     ],
     "stationapi:event_bus_client": [
-      "net.glasslauncher.example.events.init.KeyBindingListener",
-      "net.glasslauncher.example.events.init.TextureListener",
-      "net.glasslauncher.example.events.ingame.KeyPressedListener"
+      "ralf2oo2.carmod.registry.EntityRendererRegistry"
     ],
     "stationapi:event_bus_server": [
-      "net.glasslauncher.example.events.init.ServerInitListener"
     ]
   },
   "mixins": [
-    "examplemod.mixins.json"
+    "carmod.mixins.json"
   ],
 
   "depends": {

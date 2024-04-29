@@ -1,4 +1,4 @@
-package net.glasslauncher.example.mixin;
+package ralf2oo2.carmod.mixin;
 
 import net.minecraft.client.MinecraftApplet;
 import org.spongepowered.asm.mixin.Mixin;
