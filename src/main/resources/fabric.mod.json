@@ -21,7 +21,8 @@
     "stationapi:event_bus": [
       "ralf2oo2.carmod.Carmod",
       "ralf2oo2.carmod.registry.EntityRegistry",
-      "ralf2oo2.carmod.registry.ItemRegistry"
+      "ralf2oo2.carmod.registry.ItemRegistry",
+      "ralf2oo2.carmod.listener.KeyPressedListener"
     ],
     "stationapi:event_bus_client": [
       "ralf2oo2.carmod.registry.EntityRendererRegistry"

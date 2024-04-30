@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 
@@ -469,6 +470,83 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.StructGeometry _parent() { return _parent; }
     }
+    public static class StructTextureData extends KaitaiStruct {
+        public static StructTextureData fromFile(String fileName) throws IOException {
+            return new StructTextureData(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public StructTextureData(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public StructTextureData(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent) {
+            this(_io, _parent, null);
+        }
+
+        public StructTextureData(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.version = this._io.readU4le();
+            this.filterFlags = this._io.readU4le();
+            this.textureName = new String(this._io.readBytes(32), Charset.forName("UTF-8"));
+            this.alphaName = new String(this._io.readBytes(32), Charset.forName("UTF-8"));
+            this.alphaFlags = this._io.readU4le();
+            this.direct3dTextureFormat = this._io.readU4le();
+            this.width = this._io.readU2le();
+            this.height = this._io.readU2le();
+            this.depth = this._io.readU1();
+            this.mipmapCount = this._io.readU1();
+            this.texcodeType = this._io.readU1();
+            this.flags = this._io.readU1();
+            this.palette = this._io.readBytes((depth() == 8 ? (256 * 4) : 0));
+            this.dataSize = this._io.readU4le();
+            this.data = this._io.readBytes(dataSize());
+            this.mipmaps = new ArrayList<Mipmap>();
+            for (int i = 0; i < (mipmapCount() - 1); i++) {
+                this.mipmaps.add(new Mipmap(this._io, this, _root));
+            }
+        }
+        private long version;
+        private long filterFlags;
+        private String textureName;
+        private String alphaName;
+        private long alphaFlags;
+        private long direct3dTextureFormat;
+        private int width;
+        private int height;
+        private int depth;
+        private int mipmapCount;
+        private int texcodeType;
+        private int flags;
+        private byte[] palette;
+        private long dataSize;
+        private byte[] data;
+        private ArrayList<Mipmap> mipmaps;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.ListWithHeader _parent;
+        public long version() { return version; }
+        public long filterFlags() { return filterFlags; }
+        public String textureName() { return textureName; }
+        public String alphaName() { return alphaName; }
+        public long alphaFlags() { return alphaFlags; }
+        public long direct3dTextureFormat() { return direct3dTextureFormat; }
+        public int width() { return width; }
+        public int height() { return height; }
+        public int depth() { return depth; }
+        public int mipmapCount() { return mipmapCount; }
+        public int texcodeType() { return texcodeType; }
+        public int flags() { return flags; }
+        public byte[] palette() { return palette; }
+        public long dataSize() { return dataSize; }
+        public byte[] data() { return data; }
+        public ArrayList<Mipmap> mipmaps() { return mipmaps; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
 
     /**
      * @see <a href="https://gtamods.com/wiki/Geometry_List_(RW_Section)#Structure">Source</a>
@@ -501,6 +579,38 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public long numGeometries() { return numGeometries; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
+    public static class Mipmap extends KaitaiStruct {
+        public static Mipmap fromFile(String fileName) throws IOException {
+            return new Mipmap(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public Mipmap(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public Mipmap(KaitaiStream _io, RenderwareBinaryStream.StructTextureData _parent) {
+            this(_io, _parent, null);
+        }
+
+        public Mipmap(KaitaiStream _io, RenderwareBinaryStream.StructTextureData _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.dataSize = this._io.readU4le();
+            this.data = this._io.readBytes(dataSize());
+        }
+        private long dataSize;
+        private byte[] data;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.StructTextureData _parent;
+        public long dataSize() { return dataSize; }
+        public byte[] data() { return data; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.StructTextureData _parent() { return _parent; }
     }
     public static class Rgba extends KaitaiStruct {
         public static Rgba fromFile(String fileName) throws IOException {
@@ -895,6 +1005,12 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                             this._raw_header = this._io.readBytes(headerSize());
                             KaitaiStream _io__raw_header = new ByteBufferKaitaiStream(_raw_header);
                             this.header = new StructGeometryList(_io__raw_header, this, _root);
+                            break;
+                        }
+                        case TEXTURE_NATIVE: {
+                            this._raw_header = this._io.readBytes(headerSize());
+                            KaitaiStream _io__raw_header = new ByteBufferKaitaiStream(_raw_header);
+                            this.header = new StructTextureData(_io__raw_header, this, _root);
                             break;
                         }
                         case CLUMP: {
