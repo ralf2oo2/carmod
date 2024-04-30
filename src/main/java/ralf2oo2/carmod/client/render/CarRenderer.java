@@ -109,7 +109,6 @@ public class CarRenderer {
                     frameNames.add(namestr);
                 }
             }
-            int textureId = TxdTextureRegistry.getTextureId("lights");
 
             GL11.glTranslatef((float)x, (float)y, (float)z);
             for(int i = 0; i < atomicList.size(); i++){
@@ -120,39 +119,6 @@ public class CarRenderer {
                 renderGeometry((int)structAtomic.geometryIndex());
                 GL11.glPopMatrix();
             }
-//            System.out.println("pls");
-//
-//            Minecraft mc = Minecraft.class.cast(FabricLoader.getInstance().getGameInstance());
-//
-//            int screenWidth = mc.displayWidth;
-//            int screenHeight = mc.displayHeight;
-//            GL11.glMatrixMode(GL11.GL_PROJECTION);
-//            GL11.glLoadIdentity();
-//            GL11.glOrtho(0, screenWidth, screenHeight, 0, -1, 1);
-//
-//            GL11.glEnable(GL11.GL_TEXTURE_2D);
-//
-//            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-//            float[] vertices = {
-//                    0, 0, // bottom-left
-//                    screenWidth, 0, // bottom-right
-//                    screenWidth, screenHeight, // top-right
-//                    0, screenHeight // top-left
-//            };
-//
-//            float[] texCoords = {
-//                    0, 1, // bottom-left
-//                    1, 1, // bottom-right
-//                    1, 0, // top-right
-//                    0, 0 // top-left
-//            };
-//
-//            GL11.glBegin(GL11.GL_QUADS);
-//            for (int i = 0; i < 4; i++) {
-//                GL11.glTexCoord2f(texCoords[i * 2], texCoords[i * 2 + 1]);
-//                GL11.glVertex2f(vertices[i * 2], vertices[i * 2 + 1]);
-//            }
-//            GL11.glEnd();
 
         }
         catch (Exception e){
