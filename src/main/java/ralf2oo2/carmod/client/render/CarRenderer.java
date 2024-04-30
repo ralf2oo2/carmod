@@ -51,9 +51,31 @@ public class CarRenderer {
         }
     }
 
+    private List<Material> getMaterialListForGeometry(int geometryIndex){
+        List<Material> materials = new ArrayList<>();
+
+        RenderwareBinaryStream.ListWithHeader materialList = (RenderwareBinaryStream.ListWithHeader) ((RenderwareBinaryStream.ListWithHeader)geometryList.entries().get(geometryIndex).body()).entries().get(0).body();
+        RenderwareBinaryStream.StructMaterialList structMaterialList = (RenderwareBinaryStream.StructMaterialList)materialList.header();
+        for(int i = 0; i < structMaterialList.materialCount(); i++){
+            RenderwareBinaryStream.ListWithHeader material = (RenderwareBinaryStream.ListWithHeader) materialList.entries().get(i).body();
+            RenderwareBinaryStream.StructMaterial structMaterial = (RenderwareBinaryStream.StructMaterial)material.header();
+            Rgba rgba = new Rgba(structMaterial.color().r(), structMaterial.color().g(), structMaterial.color().b(), structMaterial.color().a());
+            if(structMaterial.isTextured() > 0){
+                RenderwareBinaryStream.ListWithHeader texture = (RenderwareBinaryStream.ListWithHeader) material.entries().get(0).body();
+                RenderwareBinaryStream.StructTexture structTexture = (RenderwareBinaryStream.StructTexture) texture.header();
+                RenderwareBinaryStream.StructString textureName = (RenderwareBinaryStream.StructString)texture.entries().get(0).body();
+                RenderwareBinaryStream.StructString maskName = (RenderwareBinaryStream.StructString)texture.entries().get(1).body();
+                materials.add(new Material((int)structMaterial.flags(), rgba, structMaterial.ambient(), structMaterial.specular(), structMaterial.diffuse(), (int)structTexture.filterFlags(), textureName.value(), maskName.value()));
+                continue;
+            }
+            materials.add(new Material((int)structMaterial.flags(), rgba, structMaterial.ambient(), structMaterial.specular(), structMaterial.diffuse()));
+        }
+        return  materials;
+    }
+
     private void renderGeometry(int geometryIndex){
         try{
-            GL11.glColor3f(1f, 1f, 1f);
+            List<Material> materials = getMaterialListForGeometry(geometryIndex);
             GL11.glEnable(GL11.GL_VERTEX_ARRAY);
             GL11.glPushMatrix();
             GL11.glRotatef(-90, 1f, 0f, 0f);
@@ -63,6 +85,7 @@ public class CarRenderer {
             FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer((int)geometry.numTriangles() * 3 * 3);
             int offset = 0;
             for(RenderwareBinaryStream.Triangle triangle : geometry.geometry().triangles()){
+                //System.out.println(triangle.materialId());
                 RenderwareBinaryStream.Vector3d vert1 = vertices.get(triangle.vertex1());
                 RenderwareBinaryStream.Vector3d vert2 = vertices.get(triangle.vertex2());
                 RenderwareBinaryStream.Vector3d vert3 = vertices.get(triangle.vertex3());
@@ -74,6 +97,7 @@ public class CarRenderer {
             }
             vertexBuffer.flip();
             GL11.glVertexPointer(3, 0, vertexBuffer);
+            GL11.glColor4f((float)materials.get(0).color.r / 255f, (float)materials.get(0).color.g / 255f, (float)materials.get(0).color.b / 255f, (float)materials.get(0).color.a / 255f);
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, (int)geometry.numTriangles() * 3);
             GL11.glPopMatrix();
             GL11.glDisable(GL11.GL_VERTEX_ARRAY);

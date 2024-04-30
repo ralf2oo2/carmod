@@ -253,13 +253,37 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                         this.body = new ListWithHeader(_io__raw_body, this, _root);
                         break;
                     }
+                    case MATERIAL: {
+                        this._raw_body = this._io.readBytes(size());
+                        KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
+                        this.body = new ListWithHeader(_io__raw_body, this, _root);
+                        break;
+                    }
                     case CLUMP: {
                         this._raw_body = this._io.readBytes(size());
                         KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
                         this.body = new ListWithHeader(_io__raw_body, this, _root);
                         break;
                     }
+                    case TEXTURE: {
+                        this._raw_body = this._io.readBytes(size());
+                        KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
+                        this.body = new ListWithHeader(_io__raw_body, this, _root);
+                        break;
+                    }
                     case FRAME_LIST: {
+                        this._raw_body = this._io.readBytes(size());
+                        KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
+                        this.body = new ListWithHeader(_io__raw_body, this, _root);
+                        break;
+                    }
+                    case STRING: {
+                        this._raw_body = this._io.readBytes(size());
+                        KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
+                        this.body = new StructString(_io__raw_body, this, _root);
+                        break;
+                    }
+                    case MATERIAL_LIST: {
                         this._raw_body = this._io.readBytes(size());
                         KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
                         this.body = new ListWithHeader(_io__raw_body, this, _root);
@@ -470,6 +494,41 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.StructGeometry _parent() { return _parent; }
     }
+    public static class StructMaterialList extends KaitaiStruct {
+        public static StructMaterialList fromFile(String fileName) throws IOException {
+            return new StructMaterialList(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public StructMaterialList(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public StructMaterialList(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent) {
+            this(_io, _parent, null);
+        }
+
+        public StructMaterialList(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.materialCount = this._io.readU4le();
+            this.materialIds = new ArrayList<MaterialId>();
+            for (int i = 0; i < materialCount(); i++) {
+                this.materialIds.add(new MaterialId(this._io, this, _root));
+            }
+        }
+        private long materialCount;
+        private ArrayList<MaterialId> materialIds;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.ListWithHeader _parent;
+        public long materialCount() { return materialCount; }
+        public ArrayList<MaterialId> materialIds() { return materialIds; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
     public static class StructTextureData extends KaitaiStruct {
         public static StructTextureData fromFile(String fileName) throws IOException {
             return new StructTextureData(new ByteBufferKaitaiStream(fileName));
@@ -580,6 +639,38 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
     }
+    public static class StructTexture extends KaitaiStruct {
+        public static StructTexture fromFile(String fileName) throws IOException {
+            return new StructTexture(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public StructTexture(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public StructTexture(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent) {
+            this(_io, _parent, null);
+        }
+
+        public StructTexture(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.filterFlags = this._io.readU2le();
+            this.unused = this._io.readU2le();
+        }
+        private int filterFlags;
+        private int unused;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.ListWithHeader _parent;
+        public int filterFlags() { return filterFlags; }
+        public int unused() { return unused; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
     public static class Mipmap extends KaitaiStruct {
         public static Mipmap fromFile(String fileName) throws IOException {
             return new Mipmap(new ByteBufferKaitaiStream(fileName));
@@ -621,11 +712,11 @@ public class RenderwareBinaryStream extends KaitaiStruct {
             this(_io, null, null);
         }
 
-        public Rgba(KaitaiStream _io, RenderwareBinaryStream.GeometryNonNative _parent) {
+        public Rgba(KaitaiStream _io, KaitaiStruct _parent) {
             this(_io, _parent, null);
         }
 
-        public Rgba(KaitaiStream _io, RenderwareBinaryStream.GeometryNonNative _parent, RenderwareBinaryStream _root) {
+        public Rgba(KaitaiStream _io, KaitaiStruct _parent, RenderwareBinaryStream _root) {
             super(_io);
             this._parent = _parent;
             this._root = _root;
@@ -642,13 +733,13 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         private int b;
         private int a;
         private RenderwareBinaryStream _root;
-        private RenderwareBinaryStream.GeometryNonNative _parent;
+        private KaitaiStruct _parent;
         public int r() { return r; }
         public int g() { return g; }
         public int b() { return b; }
         public int a() { return a; }
         public RenderwareBinaryStream _root() { return _root; }
-        public RenderwareBinaryStream.GeometryNonNative _parent() { return _parent; }
+        public KaitaiStruct _parent() { return _parent; }
     }
     public static class Sphere extends KaitaiStruct {
         public static Sphere fromFile(String fileName) throws IOException {
@@ -944,6 +1035,35 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public KaitaiStruct _parent() { return _parent; }
     }
+    public static class StructString extends KaitaiStruct {
+        public static StructString fromFile(String fileName) throws IOException {
+            return new StructString(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public StructString(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public StructString(KaitaiStream _io, RenderwareBinaryStream _parent) {
+            this(_io, _parent, null);
+        }
+
+        public StructString(KaitaiStream _io, RenderwareBinaryStream _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.value = new String(this._io.readBytes(_parent().size()), Charset.forName("UTF-8"));
+        }
+        private String value;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream _parent;
+        public String value() { return value; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream _parent() { return _parent; }
+    }
 
     /**
      * Typical structure used by many data types in RenderWare binary
@@ -1013,16 +1133,34 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                             this.header = new StructTextureData(_io__raw_header, this, _root);
                             break;
                         }
+                        case MATERIAL: {
+                            this._raw_header = this._io.readBytes(headerSize());
+                            KaitaiStream _io__raw_header = new ByteBufferKaitaiStream(_raw_header);
+                            this.header = new StructMaterial(_io__raw_header, this, _root);
+                            break;
+                        }
                         case CLUMP: {
                             this._raw_header = this._io.readBytes(headerSize());
                             KaitaiStream _io__raw_header = new ByteBufferKaitaiStream(_raw_header);
                             this.header = new StructClump(_io__raw_header, this, _root);
                             break;
                         }
+                        case TEXTURE: {
+                            this._raw_header = this._io.readBytes(headerSize());
+                            KaitaiStream _io__raw_header = new ByteBufferKaitaiStream(_raw_header);
+                            this.header = new StructTexture(_io__raw_header, this, _root);
+                            break;
+                        }
                         case FRAME_LIST: {
                             this._raw_header = this._io.readBytes(headerSize());
                             KaitaiStream _io__raw_header = new ByteBufferKaitaiStream(_raw_header);
                             this.header = new StructFrameList(_io__raw_header, this, _root);
+                            break;
+                        }
+                        case MATERIAL_LIST: {
+                            this._raw_header = this._io.readBytes(headerSize());
+                            KaitaiStream _io__raw_header = new ByteBufferKaitaiStream(_raw_header);
+                            this.header = new StructMaterialList(_io__raw_header, this, _root);
                             break;
                         }
                         default: {
@@ -1148,6 +1286,35 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.StructFrameList _parent() { return _parent; }
     }
+    public static class MaterialId extends KaitaiStruct {
+        public static MaterialId fromFile(String fileName) throws IOException {
+            return new MaterialId(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public MaterialId(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public MaterialId(KaitaiStream _io, RenderwareBinaryStream.StructMaterialList _parent) {
+            this(_io, _parent, null);
+        }
+
+        public MaterialId(KaitaiStream _io, RenderwareBinaryStream.StructMaterialList _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.id = this._io.readS4le();
+        }
+        private int id;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.StructMaterialList _parent;
+        public int id() { return id; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.StructMaterialList _parent() { return _parent; }
+    }
     public static class TexCoord extends KaitaiStruct {
         public static TexCoord fromFile(String fileName) throws IOException {
             return new TexCoord(new ByteBufferKaitaiStream(fileName));
@@ -1238,6 +1405,59 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         private RenderwareBinaryStream _root;
         private RenderwareBinaryStream.ListWithHeader _parent;
         public long numTextures() { return numTextures; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
+    public static class StructMaterial extends KaitaiStruct {
+        public static StructMaterial fromFile(String fileName) throws IOException {
+            return new StructMaterial(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public StructMaterial(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public StructMaterial(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent) {
+            this(_io, _parent, null);
+        }
+
+        public StructMaterial(KaitaiStream _io, RenderwareBinaryStream.ListWithHeader _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.flags = this._io.readU4le();
+            this.color = new Rgba(this._io, this, _root);
+            this.unused = this._io.readU4le();
+            if (_parent().version() > 197632) {
+                this.isTextured = this._io.readU4le();
+            }
+            if (_parent().version() > 197632) {
+                this.ambient = this._io.readF4le();
+            }
+            if (_parent().version() > 197632) {
+                this.specular = this._io.readF4le();
+            }
+            this.diffuse = this._io.readF4le();
+        }
+        private long flags;
+        private Rgba color;
+        private long unused;
+        private Long isTextured;
+        private Float ambient;
+        private Float specular;
+        private float diffuse;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.ListWithHeader _parent;
+        public long flags() { return flags; }
+        public Rgba color() { return color; }
+        public long unused() { return unused; }
+        public Long isTextured() { return isTextured; }
+        public Float ambient() { return ambient; }
+        public Float specular() { return specular; }
+        public float diffuse() { return diffuse; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
     }
