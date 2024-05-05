@@ -8,9 +8,7 @@ import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 import java.nio.FloatBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Struct;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class CarRenderer {
     RenderwareBinaryStream geometryData;
@@ -83,8 +81,18 @@ public class CarRenderer {
             RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryList.entries().get(geometryIndex));
             ArrayList<RenderwareBinaryStream.Vector3d> vertices = geometry.morphTargets().get(0).vertices();
             FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer((int)geometry.numTriangles() * 3 * 3);
-            int offset = 0;
+            List<int[]> materialForTriangleList = new ArrayList<>();
+            int triangles = 0;
+            int currentMaterial = -1;
             for(RenderwareBinaryStream.Triangle triangle : geometry.geometry().triangles()){
+                if(currentMaterial == -1){
+                    currentMaterial = triangle.materialId();
+                }
+                if(currentMaterial != triangle.materialId()){
+                    materialForTriangleList.add(new int[]{triangles, currentMaterial});
+                    triangles = 0;
+                    currentMaterial = triangle.materialId();
+                }
                 //System.out.println(triangle.materialId());
                 RenderwareBinaryStream.Vector3d vert1 = vertices.get(triangle.vertex1());
                 RenderwareBinaryStream.Vector3d vert2 = vertices.get(triangle.vertex2());
@@ -94,11 +102,20 @@ public class CarRenderer {
                         vert2.x(), vert2.y(), vert2.z(),
                         vert3.x(), vert3.y(), vert3.z()};
                 vertexBuffer.put(triangleVertices, 0, triangleVertices.length);
+                triangles++;
             }
+
+            if(triangles > 0){
+                materialForTriangleList.add(new int[]{triangles, currentMaterial});
+            }
+
             vertexBuffer.flip();
-            GL11.glVertexPointer(3, 0, vertexBuffer);
-            GL11.glColor4f((float)materials.get(0).color.r / 255f, (float)materials.get(0).color.g / 255f, (float)materials.get(0).color.b / 255f, (float)materials.get(0).color.a / 255f);
-            GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, (int)geometry.numTriangles() * 3);
+            for(int[] materialforTriangle : materialForTriangleList){
+                Material mat = materials.get(materialforTriangle[1]);
+                GL11.glVertexPointer(3, 0, vertexBuffer);
+                GL11.glColor4f((float)mat.color.r / 255f, (float)mat.color.g / 255f, (float)mat.color.b / 255f, (float)mat.color.a / 255f);
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, (int)materialforTriangle[0] * 3);
+            }
             GL11.glPopMatrix();
             GL11.glDisable(GL11.GL_VERTEX_ARRAY);
         }

@@ -39,5 +39,8 @@ public class TestScreen extends Screen {
                 selectedTextureIndex = TxdTextureRegistry.textureCount() - 1;
             }
         }
+        if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)){
+            minecraft.setScreen(null);
+        }
     }
 }

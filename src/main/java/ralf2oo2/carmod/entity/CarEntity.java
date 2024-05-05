@@ -9,7 +9,7 @@ public class CarEntity extends Entity {
     public String carPath;
     public CarEntity(World world) {
         super(world);
-        this.setBoundingBoxSpacing(2, 2);
+        this.setBoundingBoxSpacing(5, 5);
     }
 
     @Override
