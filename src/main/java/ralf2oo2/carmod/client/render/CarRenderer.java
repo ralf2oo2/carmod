@@ -78,20 +78,23 @@ public class CarRenderer {
 
 
     private static final String vertexShaderSource =
-        "#version 110\n"
-        + "attribute vec3 position;\n"
-        + "attribute vec2 uv;\n"
-        + "varying vec2 outUV;\n"
+        "#version 330 core\n"
+        + "in vec3 position;\n"
+        + "in vec2 uv;\n"
+        + "uniform mat4 modelViewMatrix;\n"
+        + "uniform mat4 projectionMatrix;\n"
+        + "out vec2 outUV;\n"
         + "void main() {\n"
-        + "    gl_Position = vec4(position, 1.0);\n"
+        + "    outUV = uv;\n"
+        + "    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n"
         + "    outUV = uv;\n"
         + "}";
     private static final String fragmentShaderSource =
-        "#version 110\n"
-        + "varying vec2 outUV;\n"
+        "#version 330 core\n"
+        + "in vec2 uv;\n"
         + "uniform sampler2D textureSampler;\n"
         + "void main() {\n"
-        + "    vec4 texColor = texture2D(textureSampler, outUV);\n"
+        + "    vec4 texColor = texture2D(textureSampler, uv);\n"
         + "    gl_FragColor = texColor;\n"
         + "}";
 
@@ -155,7 +158,7 @@ public class CarRenderer {
                 verticesByMaterial[i] = new ArrayList<>();
             }
 
-            Vertex[] vertexes = new Vertex[(int)geometry.numVertices()];
+            //Vertex[] vertexes = new Vertex[(int)geometry.numVertices()];
             int triangles = 0;
             int currentMaterial = -1;
             int vertexOffset = 0;
@@ -184,12 +187,24 @@ public class CarRenderer {
                 vertex3.y = vert3.y();
                 vertex3.z = vert3.z();
 
-                vertex1.uOffset = uvLayer.texCoords().get(vertexOffset).u();
-                vertex1.vOffset = uvLayer.texCoords().get(vertexOffset).v();
-                vertex2.uOffset = uvLayer.texCoords().get(vertexOffset + 1).u();
-                vertex2.vOffset = uvLayer.texCoords().get(vertexOffset + 1).v();
-                vertex3.uOffset = uvLayer.texCoords().get(vertexOffset + 2).u();
-                vertex3.vOffset = uvLayer.texCoords().get(vertexOffset + 2).v();
+
+                // TODO: fix this
+                if(materials.get(triangle.materialId()).hasTexture){
+                    if(vertexOffset < uvLayer.texCoords().size()){
+                        vertex1.uOffset = uvLayer.texCoords().get(vertexOffset).u();
+                        vertex1.vOffset = uvLayer.texCoords().get(vertexOffset).v();
+                    }
+                    if(vertexOffset + 1 < uvLayer.texCoords().size()){
+                        vertex2.uOffset = uvLayer.texCoords().get(vertexOffset + 1).u();
+                        vertex2.vOffset = uvLayer.texCoords().get(vertexOffset + 1).v();
+                    }
+                    if(vertexOffset + 2 < uvLayer.texCoords().size()){
+                        vertex3.uOffset = uvLayer.texCoords().get(vertexOffset + 2).u();
+                        vertex3.vOffset = uvLayer.texCoords().get(vertexOffset + 2).v();
+                    }
+
+                    vertexOffset += 3;
+                }
 
 //                float[] triangleVertices = new float[]{vert1.x(), vert1.y(), vert1.z(),
 //                        vert2.x(), vert2.y(), vert2.z(),
@@ -199,7 +214,6 @@ public class CarRenderer {
                 verticesByMaterial[currentMaterial].add(vertex2);
                 verticesByMaterial[currentMaterial].add(vertex3);
                 triangles++;
-                vertexOffset += 3;
             }
             for(List<Vertex> verts : verticesByMaterial){
                 if(verts.size() == 0) continue;
@@ -216,7 +230,7 @@ public class CarRenderer {
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
                 GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
 
-                int stride = 6 * Float.BYTES; // 3 position + 2 UV offset
+                int stride = 5 * Float.BYTES; // 3 position + 2 UV offset
                 GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, stride, 0); // Position
                 GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
 
@@ -224,7 +238,25 @@ public class CarRenderer {
                 GL20.glEnableVertexAttribArray(1); // UV offset
 
                 GL20.glUseProgram(shaderProgram);
-                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, vertexes.length);
+
+                FloatBuffer modelViewMatrixArray = BufferUtils.createFloatBuffer(16);
+                FloatBuffer projectionMatrixArray = BufferUtils.createFloatBuffer(16);
+                GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, modelViewMatrixArray);
+                GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projectionMatrixArray);
+
+                int modelViewMatrixLocation = GL20.glGetUniformLocation(shaderProgram, "modelViewMatrix");
+                int projectionMatrixLocation = GL20.glGetUniformLocation(shaderProgram, "projectionMatrix");
+                FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
+                FloatBuffer projectionBuffer = BufferUtils.createFloatBuffer(16);
+                matrixBuffer.put(modelViewMatrixArray);
+                projectionBuffer.put(projectionMatrixArray);
+                matrixBuffer.flip();
+                projectionBuffer.flip();
+
+                GL20.glUniformMatrix4(modelViewMatrixLocation, false, matrixBuffer);
+                GL20.glUniformMatrix4(projectionMatrixLocation, false, projectionBuffer);
+
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, verts.size());
 
                 GL20.glDisableVertexAttribArray(0); // Position
                 GL20.glDisableVertexAttribArray(1); // UV offset
@@ -244,6 +276,7 @@ public class CarRenderer {
 //            }
         }
         catch (Exception e){
+            System.out.println(e);
         }
         GL11.glPopMatrix();
         //GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
