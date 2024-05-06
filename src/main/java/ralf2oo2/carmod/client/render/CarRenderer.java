@@ -3,12 +3,22 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 
 import java.nio.FloatBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Struct;
 import java.util.*;
+
+class Vertex {
+    static int SIZE = Float.SIZE * 6;
+    float x, y, z; // Position
+    float uOffset, vOffset; // UV offsets
+    float r, g, b, a;
+    float materialIndex;
+}
 
 public class CarRenderer {
     RenderwareBinaryStream geometryData;
@@ -72,7 +82,7 @@ public class CarRenderer {
     }
 
     private void renderGeometry(int geometryIndex){
-        GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+        //GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
         GL11.glPushMatrix();
         try{
             List<Material> materials = getMaterialListForGeometry(geometryIndex);
@@ -80,11 +90,18 @@ public class CarRenderer {
 
             RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryList.entries().get(geometryIndex));
             ArrayList<RenderwareBinaryStream.Vector3d> vertices = geometry.morphTargets().get(0).vertices();
-            FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer((int)geometry.numTriangles() * 3 * 3);
+            RenderwareBinaryStream.UvLayer uvLayer = geometry.geometry().uvLayers().get(0);
+            //FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer((int)geometry.numTriangles() * 3 * 3);
+            FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer((int)geometry.numVertices() * Vertex.SIZE);
             List<int[]> materialForTriangleList = new ArrayList<>();
+            Vertex[] vertexes = new Vertex[(int)geometry.numVertices()];
             int triangles = 0;
             int currentMaterial = -1;
+            int vertexOffset = 0;
             for(RenderwareBinaryStream.Triangle triangle : geometry.geometry().triangles()){
+                Vertex vertex1 = new Vertex();
+                Vertex vertex2 = new Vertex();
+                Vertex vertex3 = new Vertex();
                 if(currentMaterial == -1){
                     currentMaterial = triangle.materialId();
                 }
@@ -98,29 +115,82 @@ public class CarRenderer {
                 RenderwareBinaryStream.Vector3d vert2 = vertices.get(triangle.vertex2());
                 RenderwareBinaryStream.Vector3d vert3 = vertices.get(triangle.vertex3());
 
-                float[] triangleVertices = new float[]{vert1.x(), vert1.y(), vert1.z(),
-                        vert2.x(), vert2.y(), vert2.z(),
-                        vert3.x(), vert3.y(), vert3.z()};
-                vertexBuffer.put(triangleVertices, 0, triangleVertices.length);
+                vertex1.x = vert1.x();
+                vertex1.y = vert1.y();
+                vertex1.z = vert1.z();
+                vertex2.x = vert2.x();
+                vertex2.y = vert2.y();
+                vertex2.z = vert2.z();
+                vertex3.x = vert3.x();
+                vertex3.y = vert3.y();
+                vertex3.z = vert3.z();
+
+                vertex1.uOffset = uvLayer.texCoords().get(vertexOffset).u();
+                vertex1.vOffset = uvLayer.texCoords().get(vertexOffset).v();
+                vertex2.uOffset = uvLayer.texCoords().get(vertexOffset + 1).u();
+                vertex2.vOffset = uvLayer.texCoords().get(vertexOffset + 1).v();
+                vertex3.uOffset = uvLayer.texCoords().get(vertexOffset + 2).u();
+                vertex3.vOffset = uvLayer.texCoords().get(vertexOffset + 2).v();
+
+                vertex1.materialIndex = currentMaterial;
+                vertex2.materialIndex = currentMaterial;
+                vertex3.materialIndex = currentMaterial;
+
+//                float[] triangleVertices = new float[]{vert1.x(), vert1.y(), vert1.z(),
+//                        vert2.x(), vert2.y(), vert2.z(),
+//                        vert3.x(), vert3.y(), vert3.z()};
+                //vertexBuffer.put(triangleVertices, 0, triangleVertices.length);
+                vertexes[vertexOffset] = vertex1;
+                vertexes[vertexOffset + 1] = vertex2;
+                vertexes[vertexOffset + 2] = vertex3;
                 triangles++;
+                vertexOffset += 3;
             }
 
             if(triangles > 0){
                 materialForTriangleList.add(new int[]{triangles, currentMaterial});
             }
+            for(Vertex vertex : vertexes){
+                vertexBuffer.put(vertex.x).put(vertex.y).put(vertex.z);
+                vertexBuffer.put(vertex.uOffset).put(vertex.vOffset);
+                vertexBuffer.put(vertex.materialIndex);
+            }
 
             vertexBuffer.flip();
-            for(int[] materialforTriangle : materialForTriangleList){
-                Material mat = materials.get(materialforTriangle[1]);
-                GL11.glVertexPointer(3, 0, vertexBuffer);
-                GL11.glColor4f((float)mat.color.r / 255f, (float)mat.color.g / 255f, (float)mat.color.b / 255f, (float)mat.color.a / 255f);
-                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, (int)materialforTriangle[0] * 3);
-            }
+
+            int vbo = GL15.glGenBuffers();
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+            GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
+
+            int stride = 6 * Float.BYTES; // 3 position + 2 UV offset
+            GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, stride, 0); // Position
+            GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
+            GL20.glVertexAttribPointer(2, 1, GL11.GL_FLOAT, false, stride, 5 * Float.BYTES); // UV offset
+
+            GL20.glEnableVertexAttribArray(0); // Position
+            GL20.glEnableVertexAttribArray(1); // UV offset
+            GL20.glEnableVertexAttribArray(2); // UV offset
+
+            //GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, vertexes.length);
+
+            GL20.glDisableVertexAttribArray(0); // Position
+            GL20.glDisableVertexAttribArray(1); // UV offset
+            GL20.glDisableVertexAttribArray(2); // UV offset
+
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+            GL15.glDeleteBuffers(vbo);
+
+//            for(int[] materialforTriangle : materialForTriangleList){
+//                Material mat = materials.get(materialforTriangle[1]);
+//                GL11.glVertexPointer(3, 0, vertexBuffer);
+//                GL11.glColor4f((float)mat.color.r / 255f, (float)mat.color.g / 255f, (float)mat.color.b / 255f, (float)mat.color.a / 255f);
+//                GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, (int)materialforTriangle[0] * 3);
+//            }
         }
         catch (Exception e){
         }
         GL11.glPopMatrix();
-        GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
+        //GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
     }
 
     public void render(String path, double x, double y, double z){
