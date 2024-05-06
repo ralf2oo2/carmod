@@ -72,10 +72,10 @@ public class CarRenderer {
     }
 
     private void renderGeometry(int geometryIndex){
+        GL11.glEnableClientState(GL11.GL_VERTEX_ARRAY);
+        GL11.glPushMatrix();
         try{
             List<Material> materials = getMaterialListForGeometry(geometryIndex);
-            GL11.glEnable(GL11.GL_VERTEX_ARRAY);
-            GL11.glPushMatrix();
             GL11.glRotatef(-90, 1f, 0f, 0f);
 
             RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryList.entries().get(geometryIndex));
@@ -116,11 +116,11 @@ public class CarRenderer {
                 GL11.glColor4f((float)mat.color.r / 255f, (float)mat.color.g / 255f, (float)mat.color.b / 255f, (float)mat.color.a / 255f);
                 GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, (int)materialforTriangle[0] * 3);
             }
-            GL11.glPopMatrix();
-            GL11.glDisable(GL11.GL_VERTEX_ARRAY);
         }
         catch (Exception e){
         }
+        GL11.glPopMatrix();
+        GL11.glDisableClientState(GL11.GL_VERTEX_ARRAY);
     }
 
     public void render(String path, double x, double y, double z){
