@@ -30,17 +30,24 @@ public class TxdTextureRegistry {
 
     public static void registerTexture(RenderwareBinaryStream.StructTextureData textureData){
         try{
-            int format = 0x44585431;
-            DDSReader.Order order = DDSReader.DXT1Order;
-            String textureFormat = new String(ByteBuffer.allocate(4).putInt((int)textureData.direct3dTextureFormat()).array(), StandardCharsets.UTF_8);
-            switch (textureFormat){
-                case "1TXD": format = 0x44585431; order = DDSReader.DXT1Order; break;
-                case "3TXD": format = 0x44585433; order = DDSReader.DXT3Order; break;
+            ByteBuffer textureBuffer;
+            if(textureData.direct3dTextureFormat() != 1){
+                int format = 0x44585431;
+                DDSReader.Order order = DDSReader.DXT1Order;
+                String textureFormat = new String(ByteBuffer.allocate(4).putInt((int)textureData.direct3dTextureFormat()).array(), StandardCharsets.UTF_8);
+                switch (textureFormat){
+                    case "1TXD": format = 0x44585431; order = DDSReader.DXT1Order; break;
+                    case "3TXD": format = 0x44585433; order = DDSReader.DXT3Order; break;
+                }
+                int[] decodedTexture = DDSReader.read(textureData.data(), order, 0, textureData.width(), textureData.height(), format);
+                textureBuffer = ByteBuffer.allocateDirect(textureData.width() * textureData.height() * 4);
+                for(int pixel : decodedTexture){
+                    textureBuffer.putInt(pixel);
+                }
             }
-            int[] decodedTexture = DDSReader.read(textureData.data(), order, 0, textureData.width(), textureData.height(), format);
-            ByteBuffer textureBuffer = ByteBuffer.allocateDirect(textureData.width() * textureData.height() * 4);
-            for(int pixel : decodedTexture){
-                textureBuffer.putInt(pixel);
+            else{
+                textureBuffer = ByteBuffer.allocateDirect(textureData.data().length);
+                textureBuffer.put(textureData.data());
             }
             textureBuffer.rewind();
 

@@ -270,16 +270,16 @@ public class CarRenderer {
                 int textureUnit = 0;
                 if(materials.get(index).hasTexture){
                     int textureId = TxdTextureRegistry.getTextureId(materials.get(index).texture.name);
-                    GL13.glActiveTexture(GL13.GL_TEXTURE0 + textureUnit);
+                    GL13.glActiveTexture(GL13.GL_TEXTURE0);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-                    GL20.glUniform1i(textureSamplerLocation, textureUnit);
+                    GL20.glUniform1i(textureSamplerLocation, GL13.GL_TEXTURE0);
                     GL20.glUniform1i(useTextureLocation, 1);
                 } else {
                     GL20.glUniform1i(useTextureLocation, 0);
                 }
 
                 GL20.glVertexAttribPointer(positionLocation, 3, GL11.GL_FLOAT, false, stride, 0); // Position
-                GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
+                GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, true, stride, 3 * Float.BYTES); // UV offset
                 GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, true, stride, 5 * Float.BYTES); // UV offset
 
                 GL20.glEnableVertexAttribArray(positionLocation); // Position
