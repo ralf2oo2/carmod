@@ -21,7 +21,7 @@ public class ItemCarSpawner extends TemplateItem {
         carEntity.x = x;
         carEntity.y = y + 1;
         carEntity.z = z;
-        carEntity.carPath = FabricLoader.getInstance().getConfigDir() + "/test";
+        carEntity.carName = "test";
         world.method_210(carEntity);
         return true;
     }

@@ -10,13 +10,6 @@ import java.nio.FloatBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-class Vertex {
-    static int SIZE = Float.BYTES * 9;
-    float x, y, z; // Position
-    float uOffset, vOffset = 0; // UV offsets
-    float r, g, b, a = 0;
-}
-
 public class CarRenderer {
     RenderwareBinaryStream geometryData;
     RenderwareBinaryStream textureData;

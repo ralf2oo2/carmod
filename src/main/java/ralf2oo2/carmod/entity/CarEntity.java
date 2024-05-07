@@ -6,7 +6,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.world.World;
 
 public class CarEntity extends Entity {
-    public String carPath;
+    public String carName;
     public CarEntity(World world) {
         super(world);
         this.setBoundingBoxSpacing(5, 5);

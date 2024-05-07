@@ -12,6 +12,9 @@ public class CarEntityRenderer extends EntityRenderer {
     @Override
     public void render(Entity entity, double x, double y, double z, float g, float h) {
         CarEntity carEntity = (CarEntity)entity;
-        carRenderer.render(carEntity.carPath, x, y, z);
+        CarModel carModel = CarModel.getCarModel(carEntity.carName);
+        if(carModel != null){
+            carModel.render(x, y, z);
+        }
     }
 }
