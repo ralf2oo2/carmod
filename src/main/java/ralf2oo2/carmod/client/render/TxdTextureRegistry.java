@@ -31,7 +31,7 @@ public class TxdTextureRegistry {
     public static void registerTexture(RenderwareBinaryStream.StructTextureData textureData){
         try{
             ByteBuffer textureBuffer;
-            if(textureData.direct3dTextureFormat() != 1){
+            if(textureData.direct3dTextureFormat() != 0){
                 int format = 0x44585431;
                 DDSReader.Order order = DDSReader.DXT1Order;
                 String textureFormat = new String(ByteBuffer.allocate(4).putInt((int)textureData.direct3dTextureFormat()).array(), StandardCharsets.UTF_8);
