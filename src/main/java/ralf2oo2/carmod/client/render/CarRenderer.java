@@ -12,7 +12,7 @@ import java.util.*;
 class Vertex {
     static int SIZE = Float.SIZE * 5;
     float x, y, z; // Position
-    float uOffset, vOffset; // UV offsets
+    float uOffset, vOffset = 0; // UV offsets
 }
 
 public class CarRenderer {
@@ -78,7 +78,7 @@ public class CarRenderer {
 
 
     private static final String vertexShaderSource =
-        "#version 330 core\n"
+        "#version 120\n"
         + "in vec3 position;\n"
         + "in vec2 uv;\n"
         + "uniform mat4 modelViewMatrix;\n"
@@ -87,10 +87,9 @@ public class CarRenderer {
         + "void main() {\n"
         + "    outUV = uv;\n"
         + "    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n"
-        + "    outUV = uv;\n"
         + "}";
     private static final String fragmentShaderSource =
-        "#version 330 core\n"
+        "#version 120\n"
         + "in vec2 uv;\n"
         + "uniform sampler2D textureSampler;\n"
         + "void main() {\n"
@@ -226,18 +225,22 @@ public class CarRenderer {
 
                 vertexBuffer.flip();
 
+                GL20.glUseProgram(shaderProgram);
+
                 int vbo = GL15.glGenBuffers();
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
                 GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
 
                 int stride = 5 * Float.BYTES; // 3 position + 2 UV offset
-                GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, stride, 0); // Position
-                GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
 
-                GL20.glEnableVertexAttribArray(0); // Position
-                GL20.glEnableVertexAttribArray(1); // UV offset
+                int positionLocation = GL20.glGetAttribLocation(shaderProgram, "position");
+                int uvLocation = GL20.glGetAttribLocation(shaderProgram, "uv");
 
-                GL20.glUseProgram(shaderProgram);
+                GL20.glVertexAttribPointer(positionLocation, 3, GL11.GL_FLOAT, false, stride, 0); // Position
+                GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
+
+                GL20.glEnableVertexAttribArray(positionLocation); // Position
+                GL20.glEnableVertexAttribArray(uvLocation); // UV offset
 
                 FloatBuffer modelViewMatrixArray = BufferUtils.createFloatBuffer(16);
                 FloatBuffer projectionMatrixArray = BufferUtils.createFloatBuffer(16);
