@@ -1,6 +1,7 @@
 package ralf2oo2.carmod.client.render;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
@@ -10,9 +11,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 class Vertex {
-    static int SIZE = Float.SIZE * 5;
+    static int SIZE = Float.SIZE * 9;
     float x, y, z; // Position
     float uOffset, vOffset = 0; // UV offsets
+    float r, g, b, a = 0;
 }
 
 public class CarRenderer {
@@ -79,22 +81,33 @@ public class CarRenderer {
 
     private static final String vertexShaderSource =
         "#version 120\n"
-        + "in vec3 position;\n"
-        + "in vec2 uv;\n"
+        + "in vec3 vertexPosition;\n"
+        + "in vec2 vertexUV;\n"
+        + "in vec4 matColor;\n"
         + "uniform mat4 modelViewMatrix;\n"
         + "uniform mat4 projectionMatrix;\n"
         + "out vec2 outUV;\n"
+        + "out vec4 outColor;\n"
         + "void main() {\n"
-        + "    outUV = uv;\n"
-        + "    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n"
+        + "    outUV = vertexUV;\n"
+        + "    outColor = matColor;\n"
+        + "    gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);\n"
         + "}";
     private static final String fragmentShaderSource =
         "#version 120\n"
-        + "in vec2 uv;\n"
+        + "in vec2 outUV;\n"
+        + "in vec4 outColor;\n"
         + "uniform sampler2D textureSampler;\n"
+        + "uniform int useTexture;\n"
         + "void main() {\n"
-        + "    vec4 texColor = texture2D(textureSampler, uv);\n"
-        + "    gl_FragColor = texColor;\n"
+        + "    vec4 texColor;\n"
+        + "    if(useTexture > 0){\n"
+        + "    texColor = texture2D(textureSampler, outUV);\n"
+        + "    } else {\n"
+        + "    texColor = vec4(1.0);\n"
+        + "    }\n"
+        + "    vec4 finalColor = texColor * outColor;\n"
+        + "    gl_FragColor = finalColor;\n"
         + "}";
 
     private static int shaderProgram;
@@ -186,6 +199,19 @@ public class CarRenderer {
                 vertex3.y = vert3.y();
                 vertex3.z = vert3.z();
 
+                vertex1.r = materials.get(currentMaterial).color.r;
+                vertex2.r = materials.get(currentMaterial).color.r;
+                vertex3.r = materials.get(currentMaterial).color.r;
+                vertex1.g = materials.get(currentMaterial).color.g;
+                vertex2.g = materials.get(currentMaterial).color.g;
+                vertex3.g = materials.get(currentMaterial).color.g;
+                vertex1.b = materials.get(currentMaterial).color.b;
+                vertex2.b = materials.get(currentMaterial).color.b;
+                vertex3.b = materials.get(currentMaterial).color.b;
+                vertex1.a = materials.get(currentMaterial).color.a;
+                vertex2.a = materials.get(currentMaterial).color.a;
+                vertex3.a = materials.get(currentMaterial).color.a;
+
 
                 // TODO: fix this
                 if(materials.get(triangle.materialId()).hasTexture){
@@ -214,13 +240,15 @@ public class CarRenderer {
                 verticesByMaterial[currentMaterial].add(vertex3);
                 triangles++;
             }
+            int index = 0;
             for(List<Vertex> verts : verticesByMaterial){
                 if(verts.size() == 0) continue;
-                FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer((int)verts.size() * Vertex.SIZE);
+                FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer((int)verts.size() * 9);
 
                 for(Vertex vertex : verts){
                     vertexBuffer.put(vertex.x).put(vertex.y).put(vertex.z);
                     vertexBuffer.put(vertex.uOffset).put(vertex.vOffset);
+                    vertexBuffer.put(vertex.r).put(vertex.g).put(vertex.b).put(vertex.a);
                 }
 
                 vertexBuffer.flip();
@@ -231,16 +259,32 @@ public class CarRenderer {
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
                 GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
 
-                int stride = 5 * Float.BYTES; // 3 position + 2 UV offset
+                int stride = 9 * Float.SIZE; // 3 position + 2 UV offset
 
-                int positionLocation = GL20.glGetAttribLocation(shaderProgram, "position");
-                int uvLocation = GL20.glGetAttribLocation(shaderProgram, "uv");
+                int positionLocation = GL20.glGetAttribLocation(shaderProgram, "vertexPosition");
+                int uvLocation = GL20.glGetAttribLocation(shaderProgram, "vertexUV");
+                int colorLocation = GL20.glGetAttribLocation(shaderProgram, "matColor");
+                int textureSamplerLocation = GL20.glGetUniformLocation(shaderProgram, "textureSampler");
+                int useTextureLocation = GL20.glGetUniformLocation(shaderProgram, "useTexture");
+
+                int textureUnit = 0;
+                if(materials.get(index).hasTexture){
+                    int textureId = TxdTextureRegistry.getTextureId(materials.get(index).texture.name);
+                    GL13.glActiveTexture(GL13.GL_TEXTURE0 + textureUnit);
+                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
+                    GL20.glUniform1i(textureSamplerLocation, textureUnit);
+                    GL20.glUniform1i(useTextureLocation, 0);
+                } else {
+                    GL20.glUniform1i(useTextureLocation, 0);
+                }
 
                 GL20.glVertexAttribPointer(positionLocation, 3, GL11.GL_FLOAT, false, stride, 0); // Position
                 GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
+                GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, true, stride, 5 * Float.BYTES); // UV offset
 
                 GL20.glEnableVertexAttribArray(positionLocation); // Position
                 GL20.glEnableVertexAttribArray(uvLocation); // UV offset
+                GL20.glEnableVertexAttribArray(colorLocation); // UV offset
 
                 FloatBuffer modelViewMatrixArray = BufferUtils.createFloatBuffer(16);
                 FloatBuffer projectionMatrixArray = BufferUtils.createFloatBuffer(16);
@@ -261,12 +305,14 @@ public class CarRenderer {
 
                 GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, verts.size());
 
-                GL20.glDisableVertexAttribArray(0); // Position
-                GL20.glDisableVertexAttribArray(1); // UV offset
+                GL20.glDisableVertexAttribArray(positionLocation); // Position
+                GL20.glDisableVertexAttribArray(uvLocation); // UV offset
+                GL20.glDisableVertexAttribArray(colorLocation); // UV offset
 
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
                 GL20.glUseProgram(0);
                 GL15.glDeleteBuffers(vbo);
+                index++;
             }
 
 
