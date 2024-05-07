@@ -269,7 +269,7 @@ public class CarRenderer {
 
                 int textureUnit = 0;
                 if(materials.get(index).hasTexture){
-                    int textureId = TxdTextureRegistry.getTextureId(materials.get(index).texture.name);
+                    int textureId = TxdTextureRegistry.getTextureId(materials.get(index).texture.name.replace("\0", ""));
                     //((Minecraft)FabricLoader.getInstance().getGameInstance()).textureManager.getTextureId("/gui/furnace.png");
                     GL13.glActiveTexture(GL13.GL_TEXTURE0);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
