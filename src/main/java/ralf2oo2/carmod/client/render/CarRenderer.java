@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 class Vertex {
-    static int SIZE = Float.SIZE * 9;
+    static int SIZE = Float.BYTES * 9;
     float x, y, z; // Position
     float uOffset, vOffset = 0; // UV offsets
     float r, g, b, a = 0;
@@ -270,16 +270,17 @@ public class CarRenderer {
                 int textureUnit = 0;
                 if(materials.get(index).hasTexture){
                     int textureId = TxdTextureRegistry.getTextureId(materials.get(index).texture.name);
+                    //((Minecraft)FabricLoader.getInstance().getGameInstance()).textureManager.getTextureId("/gui/furnace.png");
                     GL13.glActiveTexture(GL13.GL_TEXTURE0);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
-                    GL20.glUniform1i(textureSamplerLocation, GL13.GL_TEXTURE0);
+                    GL20.glUniform1i(textureSamplerLocation, 0);
                     GL20.glUniform1i(useTextureLocation, 1);
                 } else {
                     GL20.glUniform1i(useTextureLocation, 0);
                 }
 
                 GL20.glVertexAttribPointer(positionLocation, 3, GL11.GL_FLOAT, false, stride, 0); // Position
-                GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, true, stride, 3 * Float.BYTES); // UV offset
+                GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
                 GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, true, stride, 5 * Float.BYTES); // UV offset
 
                 GL20.glEnableVertexAttribArray(positionLocation); // Position
