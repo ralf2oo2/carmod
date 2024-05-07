@@ -259,7 +259,7 @@ public class CarRenderer {
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
                 GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
 
-                int stride = 9 * Float.SIZE; // 3 position + 2 UV offset
+                int stride = 9 * Float.BYTES; // 3 position + 2 UV offset
 
                 int positionLocation = GL20.glGetAttribLocation(shaderProgram, "vertexPosition");
                 int uvLocation = GL20.glGetAttribLocation(shaderProgram, "vertexUV");
@@ -273,7 +273,7 @@ public class CarRenderer {
                     GL13.glActiveTexture(GL13.GL_TEXTURE0 + textureUnit);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
                     GL20.glUniform1i(textureSamplerLocation, textureUnit);
-                    GL20.glUniform1i(useTextureLocation, 0);
+                    GL20.glUniform1i(useTextureLocation, 1);
                 } else {
                     GL20.glUniform1i(useTextureLocation, 0);
                 }
