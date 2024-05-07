@@ -80,7 +80,7 @@ public class CarRenderer {
 
 
     private static final String vertexShaderSource =
-        "#version 120\n"
+        "#version 330 core\n"
         + "in vec3 vertexPosition;\n"
         + "in vec2 vertexUV;\n"
         + "in vec4 matColor;\n"
@@ -94,7 +94,7 @@ public class CarRenderer {
         + "    gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);\n"
         + "}";
     private static final String fragmentShaderSource =
-        "#version 120\n"
+        "#version 330 core\n"
         + "in vec2 outUV;\n"
         + "in vec4 outColor;\n"
         + "uniform sampler2D textureSampler;\n"
@@ -213,23 +213,33 @@ public class CarRenderer {
                 vertex3.a = materials.get(currentMaterial).color.a;
 
 
+                RenderwareBinaryStream.TexCoord uv1 = uvLayer.texCoords().get(triangle.vertex1());
+                vertex1.uOffset = uv1.u();
+                vertex1.vOffset = uv1.v();
+                RenderwareBinaryStream.TexCoord uv2 = uvLayer.texCoords().get(triangle.vertex2());
+                vertex2.uOffset = uv2.u();
+                vertex2.vOffset = uv2.v();
+                RenderwareBinaryStream.TexCoord uv3 = uvLayer.texCoords().get(triangle.vertex3());
+                vertex3.uOffset = uv3.u();
+                vertex3.vOffset = uv3.v();
                 // TODO: fix this
-                if(materials.get(triangle.materialId()).hasTexture){
-                    if(vertexOffset < uvLayer.texCoords().size()){
-                        vertex1.uOffset = uvLayer.texCoords().get(vertexOffset).u();
-                        vertex1.vOffset = uvLayer.texCoords().get(vertexOffset).v();
-                    }
-                    if(vertexOffset + 1 < uvLayer.texCoords().size()){
-                        vertex2.uOffset = uvLayer.texCoords().get(vertexOffset + 1).u();
-                        vertex2.vOffset = uvLayer.texCoords().get(vertexOffset + 1).v();
-                    }
-                    if(vertexOffset + 2 < uvLayer.texCoords().size()){
-                        vertex3.uOffset = uvLayer.texCoords().get(vertexOffset + 2).u();
-                        vertex3.vOffset = uvLayer.texCoords().get(vertexOffset + 2).v();
-                    }
-
-                    vertexOffset += 3;
-                }
+//                if(materials.get(triangle.materialId()).hasTexture){
+//                    if(vertexOffset < uvLayer.texCoords().size()){
+//
+//                        vertex1.uOffset = uvLayer.texCoords().get(vertexOffset).u();
+//                        vertex1.vOffset = uvLayer.texCoords().get(vertexOffset).v();
+//                    }
+//                    if(vertexOffset + 1 < uvLayer.texCoords().size()){
+//                        vertex2.uOffset = uvLayer.texCoords().get(vertexOffset + 1).u();
+//                        vertex2.vOffset = uvLayer.texCoords().get(vertexOffset + 1).v();
+//                    }
+//                    if(vertexOffset + 2 < uvLayer.texCoords().size()){
+//                        vertex3.uOffset = uvLayer.texCoords().get(vertexOffset + 2).u();
+//                        vertex3.vOffset = uvLayer.texCoords().get(vertexOffset + 2).v();
+//                    }
+//
+//                    vertexOffset += 3;
+//                }
 
 //                float[] triangleVertices = new float[]{vert1.x(), vert1.y(), vert1.z(),
 //                        vert2.x(), vert2.y(), vert2.z(),

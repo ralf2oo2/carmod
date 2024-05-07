@@ -58,8 +58,8 @@ public class TxdTextureRegistry {
             GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, textureData.width(), textureData.height(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, textureBuffer);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
             GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
 
             TxdTexture txdTexture = new TxdTexture(textureId, textureData.textureName().replace("\0", ""), textureData.alphaName(), (int)textureData.version(), (int)textureData.filterFlags(), (int)textureData.direct3dTextureFormat(), textureData.width(), textureData.height(), (byte)textureData.depth(), (byte)textureData.mipmapCount(), (byte)textureData.texcodeType(), (byte)textureData.flags(), textureData.palette(), textureData.data(), textureData.mipmaps().toArray(new RenderwareBinaryStream.Mipmap[0]));
             txdTextures.add(txdTexture);
