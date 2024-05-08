@@ -1,6 +1,7 @@
 package ralf2oo2.carmod.client.render;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.entity.player.PlayerEntity;
 import org.lwjgl.opengl.GL11;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 
@@ -113,7 +114,7 @@ public class CarModel {
         }
     }
 
-    public void render(double x, double y, double z, float brightness){
+    public void render(double x, double y, double z, float brightness, PlayerEntity player){
         GL11.glTranslatef((float)x, (float)y, (float)z);
         GL11.glTranslatef(0, (float)1, 0);
         for(int i = 0; i < atomicList.size(); i++){
@@ -124,7 +125,7 @@ public class CarModel {
             RenderwareBinaryStream.Frame frame = getStructFrameList(frameList).frames().get((int)structAtomic.frameIndex());
             GL11.glPushMatrix();
             applyFrameTransformations(frame);
-            this.geometryList.get((int)structAtomic.geometryIndex()).render(brightness);
+            this.geometryList.get((int)structAtomic.geometryIndex()).render(brightness, (float)player.x, (float)player.y + player.eyeHeight, (float)player.z);
             GL11.glPopMatrix();
         }
     }

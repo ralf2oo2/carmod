@@ -42,24 +42,30 @@ public class Geometry {
                     + "out vec4 fragColor;\n"
                     + "uniform sampler2D textureSampler;\n"
                     + "uniform int useTexture;\n"
-                    + "uniform float ambient;\n"
-                    + "uniform float diffuse;\n"
-                    + "uniform float specular;\n"
+                    + "uniform float brightness;\n"
+                    + "uniform float ambientIntensity;\n"
+                    + "uniform float diffuseIntensity;\n"
+                    + "uniform float specularIntensity;\n"
                     + "uniform vec3 lightPos;\n"
                     + "uniform vec3 lightColor;\n"
+                    + "uniform vec3 viewPos;\n"
                     + "void main() {\n"
                     + "    vec3 lightDir = normalize(lightPos - outFragPos);\n"
                     + "    vec3 norm = normalize(outNormal);\n"
                     + "    float diff = max(dot(norm, lightDir), 0.0);\n"
                     + "    vec3 diffVec = diff * lightColor;\n"
-                    + "    vec3 ambientColor = vec3(ambient);\n"
+                    + "    vec3 ambientColor = ambientIntensity * lightColor;\n"
+                    + "    vec3 viewDir = normalize(viewPos - outFragPos);\n"
+                    + "    vec3 reflectDir = reflect(-lightDir, norm);\n"
+                    + "    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);\n"
+                    + "    vec3 specular = specularIntensity * spec * lightColor;\n"
                     + "    vec4 texColor;\n"
                     + "    if(useTexture > 0){\n"
                     + "    texColor = texture2D(textureSampler, outUV);\n"
                     + "    } else {\n"
                     + "    texColor = vec4(1.0);\n"
                     + "    }\n"
-                    + "    vec4 finalColor = vec4(outColor.rgb * diffVec, outColor.a) * ambient;\n"
+                    + "    vec4 finalColor = vec4((ambientColor + diffVec + specular) * outColor.rgb, outColor.a) * brightness;\n"
                     + "    fragColor = finalColor * texColor;\n"
                     + "}";
 
@@ -157,7 +163,7 @@ public class Geometry {
         }
     }
 
-    public void render(float brightness){
+    public void render(float brightness, float playerX, float playerY, float playerZ){
         GL11.glRotatef(-90, 1f, 0f, 0f);
         for(int i = 0; i < verticesByMaterial.length; i++){
             if(verticesByMaterial[i].size() == 0) continue;
@@ -186,11 +192,13 @@ public class Geometry {
             int colorLocation = GL20.glGetAttribLocation(shaderProgram, "matColor");
             int textureSamplerLocation = GL20.glGetUniformLocation(shaderProgram, "textureSampler");
             int useTextureLocation = GL20.glGetUniformLocation(shaderProgram, "useTexture");
-            int ambientLocation = GL20.glGetUniformLocation(shaderProgram, "ambient");
-            int diffuseLocation = GL20.glGetUniformLocation(shaderProgram, "diffuse");
-            int specularLocation = GL20.glGetUniformLocation(shaderProgram, "specular");
+            int brightnessLocation = GL20.glGetUniformLocation(shaderProgram, "brightness");
+            int ambientLocation = GL20.glGetUniformLocation(shaderProgram, "ambientIntensity");
+            int diffuseLocation = GL20.glGetUniformLocation(shaderProgram, "diffuseIntensity");
+            int specularLocation = GL20.glGetUniformLocation(shaderProgram, "specularIntensity");
             int lightPosLocation = GL20.glGetUniformLocation(shaderProgram, "lightPos");
             int lightColorLocation = GL20.glGetUniformLocation(shaderProgram, "lightColor");
+            int viePosLocation = GL20.glGetUniformLocation(shaderProgram, "viewPos");
 
             int textureUnit = 0;
             if(materials.get(i).hasTexture){
@@ -231,12 +239,14 @@ public class Geometry {
             GL20.glUniformMatrix4(modelViewMatrixLocation, false, matrixBuffer);
             GL20.glUniformMatrix4(projectionMatrixLocation, false, projectionBuffer);
 
-            GL20.glUniform1f(ambientLocation, brightness);//
+            GL20.glUniform1f(brightnessLocation, brightness);//
+            GL20.glUniform1f(ambientLocation, materials.get(i).ambient);//
             GL20.glUniform1f(diffuseLocation, materials.get(i).diffuse);
             GL20.glUniform1f(specularLocation, materials.get(i).specular);
 
             GL20.glUniform3f(lightPosLocation, 0.0f, 00.0f, 10.0f);
             GL20.glUniform3f(lightColorLocation, 1, 1, 1);
+            GL20.glUniform3f(viePosLocation, playerX, playerY, playerZ);
 
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, verticesByMaterial[i].size());
 
