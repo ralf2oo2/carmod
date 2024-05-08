@@ -15,32 +15,52 @@ public class Geometry {
     private static final String vertexShaderSource =
             "#version 330 core\n"
                     + "in vec3 vertexPosition;\n"
+                    + "in vec3 normalPosition;\n"
                     + "in vec2 vertexUV;\n"
                     + "in vec4 matColor;\n"
                     + "uniform mat4 modelViewMatrix;\n"
                     + "uniform mat4 projectionMatrix;\n"
+                    + "out vec3 outNormal;\n"
                     + "out vec2 outUV;\n"
                     + "out vec4 outColor;\n"
+                    + "out vec3 outFragPos;\n"
                     + "void main() {\n"
+                    + "    outNormal = normalPosition;\n"
                     + "    outUV = vertexUV;\n"
                     + "    outColor = matColor;\n"
                     + "    gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);\n"
+                    + "    mat4 cameraMatrix = inverse(modelViewMatrix);\n"
+                    + "    mat4 modelMatrix = modelViewMatrix * cameraMatrix;\n"
+                    + "    outFragPos = vec3(modelMatrix * vec4(vertexPosition, 1.0));\n"
                     + "}";
     private static final String fragmentShaderSource =
             "#version 330 core\n"
+                    + "in vec3 outNormal;\n"
                     + "in vec2 outUV;\n"
                     + "in vec4 outColor;\n"
+                    + "in vec3 outFragPos;\n"
+                    + "out vec4 fragColor;\n"
                     + "uniform sampler2D textureSampler;\n"
                     + "uniform int useTexture;\n"
+                    + "uniform float ambient;\n"
+                    + "uniform float diffuse;\n"
+                    + "uniform float specular;\n"
+                    + "uniform vec3 lightPos;\n"
+                    + "uniform vec3 lightColor;\n"
                     + "void main() {\n"
+                    + "    vec3 lightDir = normalize(lightPos - outFragPos);\n"
+                    + "    vec3 norm = normalize(outNormal);\n"
+                    + "    float diff = max(dot(norm, lightDir), 0.0);\n"
+                    + "    vec3 diffVec = diff * lightColor;\n"
+                    + "    vec3 ambientColor = vec3(ambient);\n"
                     + "    vec4 texColor;\n"
                     + "    if(useTexture > 0){\n"
                     + "    texColor = texture2D(textureSampler, outUV);\n"
                     + "    } else {\n"
                     + "    texColor = vec4(1.0);\n"
                     + "    }\n"
-                    + "    vec4 finalColor = texColor * outColor;\n"
-                    + "    gl_FragColor = finalColor;\n"
+                    + "    vec4 finalColor = vec4(outColor.rgb * diffVec, outColor.a) * ambient;\n"
+                    + "    fragColor = finalColor * texColor;\n"
                     + "}";
 
     private static int shaderProgram;
@@ -74,6 +94,7 @@ public class Geometry {
 
         List<RenderwareBinaryStream.Triangle> triangles =  geometry.geometry().triangles();
         ArrayList<RenderwareBinaryStream.Vector3d> vertices = geometry.morphTargets().get(0).vertices();
+        ArrayList<RenderwareBinaryStream.Vector3d> normals = geometry.morphTargets().get(0).normals();
         RenderwareBinaryStream.UvLayer uvLayer = geometry.geometry().uvLayers().get(0);
 
         for(RenderwareBinaryStream.Triangle triangle : triangles){
@@ -117,6 +138,18 @@ public class Geometry {
             RenderwareBinaryStream.TexCoord uv3 = uvLayer.texCoords().get(triangle.vertex3());
             vertex3.uOffset = uv3.u();
             vertex3.vOffset = uv3.v();
+            RenderwareBinaryStream.Vector3d normal1 = normals.get(triangle.vertex1());
+            vertex1.normalX = normal1.x();
+            vertex1.normalY = normal1.y();
+            vertex1.normalZ = normal1.z();
+            RenderwareBinaryStream.Vector3d normal2 = normals.get(triangle.vertex2());
+            vertex2.normalX = normal2.x();
+            vertex2.normalY = normal2.y();
+            vertex2.normalZ = normal2.z();
+            RenderwareBinaryStream.Vector3d normal3 = normals.get(triangle.vertex3());
+            vertex3.normalX = normal3.x();
+            vertex3.normalY = normal3.y();
+            vertex3.normalZ = normal3.z();
 
             verticesByMaterial[triangle.materialId()].add(vertex1);
             verticesByMaterial[triangle.materialId()].add(vertex2);
@@ -124,16 +157,17 @@ public class Geometry {
         }
     }
 
-    public void render(){
+    public void render(float brightness){
         GL11.glRotatef(-90, 1f, 0f, 0f);
         for(int i = 0; i < verticesByMaterial.length; i++){
             if(verticesByMaterial[i].size() == 0) continue;
-            FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(verticesByMaterial[i].size() * 9);
+            FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(verticesByMaterial[i].size() * 12);
 
             for(Vertex vertex : verticesByMaterial[i]){
                 vertexBuffer.put(vertex.x).put(vertex.y).put(vertex.z);
+                vertexBuffer.put(vertex.normalX).put(vertex.normalY).put(vertex.normalZ);
                 vertexBuffer.put(vertex.uOffset).put(vertex.vOffset);
-                vertexBuffer.put(vertex.r).put(vertex.g).put(vertex.b).put(vertex.a);
+                vertexBuffer.put(vertex.r / 255f).put(vertex.g / 255f).put(vertex.b / 255f).put(vertex.a / 255f);
             }
 
             vertexBuffer.flip();
@@ -144,13 +178,19 @@ public class Geometry {
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
 
-            int stride = 9 * Float.BYTES; // 3 position + 2 UV offset
+            int stride = 12 * Float.BYTES; // 3 position + 2 UV offset
 
             int positionLocation = GL20.glGetAttribLocation(shaderProgram, "vertexPosition");
+            int normalLocation = GL20.glGetAttribLocation(shaderProgram, "normalPosition");
             int uvLocation = GL20.glGetAttribLocation(shaderProgram, "vertexUV");
             int colorLocation = GL20.glGetAttribLocation(shaderProgram, "matColor");
             int textureSamplerLocation = GL20.glGetUniformLocation(shaderProgram, "textureSampler");
             int useTextureLocation = GL20.glGetUniformLocation(shaderProgram, "useTexture");
+            int ambientLocation = GL20.glGetUniformLocation(shaderProgram, "ambient");
+            int diffuseLocation = GL20.glGetUniformLocation(shaderProgram, "diffuse");
+            int specularLocation = GL20.glGetUniformLocation(shaderProgram, "specular");
+            int lightPosLocation = GL20.glGetUniformLocation(shaderProgram, "lightPos");
+            int lightColorLocation = GL20.glGetUniformLocation(shaderProgram, "lightColor");
 
             int textureUnit = 0;
             if(materials.get(i).hasTexture){
@@ -165,10 +205,12 @@ public class Geometry {
             }
 
             GL20.glVertexAttribPointer(positionLocation, 3, GL11.GL_FLOAT, false, stride, 0); // Position
-            GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // UV offset
-            GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, true, stride, 5 * Float.BYTES); // UV offset
+            GL20.glVertexAttribPointer(normalLocation, 3, GL11.GL_FLOAT, false, stride, 3 * Float.BYTES); // Position
+            GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, false, stride, 6 * Float.BYTES); // UV offset
+            GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, true, stride, 8 * Float.BYTES); // UV offset
 
             GL20.glEnableVertexAttribArray(positionLocation); // Position
+            GL20.glEnableVertexAttribArray(normalLocation); // Position
             GL20.glEnableVertexAttribArray(uvLocation); // UV offset
             GL20.glEnableVertexAttribArray(colorLocation); // UV offset
 
@@ -189,9 +231,17 @@ public class Geometry {
             GL20.glUniformMatrix4(modelViewMatrixLocation, false, matrixBuffer);
             GL20.glUniformMatrix4(projectionMatrixLocation, false, projectionBuffer);
 
+            GL20.glUniform1f(ambientLocation, brightness);//
+            GL20.glUniform1f(diffuseLocation, materials.get(i).diffuse);
+            GL20.glUniform1f(specularLocation, materials.get(i).specular);
+
+            GL20.glUniform3f(lightPosLocation, 0.0f, 00.0f, 10.0f);
+            GL20.glUniform3f(lightColorLocation, 1, 1, 1);
+
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, verticesByMaterial[i].size());
 
             GL20.glDisableVertexAttribArray(positionLocation); // Position
+            GL20.glDisableVertexAttribArray(normalLocation); // Position
             GL20.glDisableVertexAttribArray(uvLocation); // UV offset
             GL20.glDisableVertexAttribArray(colorLocation); // UV offset
 
@@ -270,6 +320,7 @@ public class Geometry {
 class Vertex {
     static int SIZE = Float.BYTES * 9;
     float x, y, z; // Position
+    float normalX, normalY, normalZ;
     float uOffset, vOffset = 0; // UV offsets
     float r, g, b, a = 0;
 }

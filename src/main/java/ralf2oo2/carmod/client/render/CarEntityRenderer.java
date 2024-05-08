@@ -14,7 +14,8 @@ public class CarEntityRenderer extends EntityRenderer {
         CarEntity carEntity = (CarEntity)entity;
         CarModel carModel = CarModel.getCarModel(carEntity.carName);
         if(carModel != null){
-            carModel.render(x, y, z);
+            carModel.render(x, y, z, carEntity.method_1394(h));
         }
+        //System.out.println(carEntity.method_1394(h));
     }
 }

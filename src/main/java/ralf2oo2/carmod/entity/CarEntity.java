@@ -3,18 +3,35 @@ package ralf2oo2.carmod.entity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class CarEntity extends Entity {
     public String carName;
     public CarEntity(World world) {
         super(world);
-        this.setBoundingBoxSpacing(5, 5);
+        this.setBoundingBoxSpacing(3, 3);
     }
 
     @Override
     protected void initDataTracker() {
 
+    }
+
+    @Override
+    public void tick() {
+        world.addParticle("note", (double)x, (double)y, (double)z, 24.0, 0.0, 0.0);
+    }
+
+    @Override
+    public boolean method_1367(Vec3d arg) {
+        //System.out.println(arg.x + " " + arg.y + " " + arg.z);
+        return true;
+    }
+
+    @Override
+    public boolean method_1364(double d) {
+        return true;
     }
 
     @Override
@@ -26,5 +43,4 @@ public class CarEntity extends Entity {
     protected void writeNbt(NbtCompound nbt) {
 
     }
-
 }
