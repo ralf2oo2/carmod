@@ -121,7 +121,7 @@ public class Geometry {
               triangle.vertex3()
             };
 
-            for(int i = 0; i < triangleVertexIndices.length; i++){
+            for(int i = 0; i < verticesByMaterial.length; i++){
                 int vertIndex = triangleVertexIndices[i];
 
                 Vertex vertex = new Vertex();
