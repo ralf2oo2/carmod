@@ -1,10 +1,7 @@
 package ralf2oo2.carmod.client.render;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.*;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 
 import java.nio.FloatBuffer;
@@ -70,6 +67,9 @@ public class Geometry {
                     + "}";
 
     private static int shaderProgram;
+    private int vbo;
+    private int[] vaos;
+    private int[] vertexCounts;
     private String name;
     private RenderwareBinaryStream geometryBinaryStream;
 
@@ -83,6 +83,7 @@ public class Geometry {
             compileShaders();
         }
         populateVertexList();
+        initBuffers();
     }
 
     public String getName(){
@@ -163,6 +164,71 @@ public class Geometry {
         }
     }
 
+    public void initBuffers(){
+
+        int totalVertices = calculateTotalVertices();
+
+        FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(totalVertices * 12); // TODO: Replace 12 with vertex size later
+
+        for (int i = 0; i < verticesByMaterial.length; i++) {
+            for (Vertex vertex : verticesByMaterial[i]) {
+                vertexBuffer.put(vertex.x).put(vertex.y).put(vertex.z);
+                vertexBuffer.put(vertex.normalX).put(vertex.normalY).put(vertex.normalZ);
+                vertexBuffer.put(vertex.uOffset).put(vertex.vOffset);
+                vertexBuffer.put(vertex.r / 255f).put(vertex.g / 255f).put(vertex.b / 255f).put(vertex.a / 255f);
+            }
+        }
+        vertexBuffer.flip();
+
+        // Generate VBO
+        vbo = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexBuffer, GL15.GL_STATIC_DRAW);
+
+        // Create VAOs for each material
+        vaos = new int[verticesByMaterial.length];
+        vertexCounts = new int[verticesByMaterial.length];
+
+        int offset = 0;
+        for (int i = 0; i < verticesByMaterial.length; i++) {
+            if (verticesByMaterial[i].size() == 0) continue; // Skip if there are no vertices
+            vaos[i] = GL30.glGenVertexArrays();
+            GL30.glBindVertexArray(vaos[i]);
+
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
+            int stride = 12 * Float.BYTES;
+
+            int positionLocation = GL20.glGetAttribLocation(shaderProgram, "vertexPosition");
+            int normalLocation = GL20.glGetAttribLocation(shaderProgram, "normalPosition");
+            int uvLocation = GL20.glGetAttribLocation(shaderProgram, "vertexUV");
+            int colorLocation = GL20.glGetAttribLocation(shaderProgram, "matColor");
+
+            GL20.glVertexAttribPointer(positionLocation, 3, GL11.GL_FLOAT, false, stride, offset * Float.BYTES);
+            GL20.glVertexAttribPointer(normalLocation, 3, GL11.GL_FLOAT, false, stride, (offset + 3) * Float.BYTES);
+            GL20.glVertexAttribPointer(uvLocation, 2, GL11.GL_FLOAT, false, stride, (offset + 6) * Float.BYTES);
+            GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, true, stride, (offset + 8) * Float.BYTES);
+
+            GL20.glEnableVertexAttribArray(positionLocation);
+            GL20.glEnableVertexAttribArray(normalLocation);
+            GL20.glEnableVertexAttribArray(uvLocation);
+            GL20.glEnableVertexAttribArray(colorLocation);
+
+            vertexCounts[i] = verticesByMaterial[i].size();
+            offset += vertexCounts[i];
+        }
+
+        GL30.glBindVertexArray(0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+    }
+
+    private int calculateTotalVertices(){
+        int totalVertices = 0;
+        for (int i = 0; i < verticesByMaterial.length; i++) {
+            totalVertices += verticesByMaterial[i].size();
+        }
+        return  totalVertices;
+    }
+
     public void render(float brightness, float playerX, float playerY, float playerZ){
         GL11.glRotatef(-90, 1f, 0f, 0f);
         for(int i = 0; i < verticesByMaterial.length; i++){
@@ -186,10 +252,7 @@ public class Geometry {
 
             int stride = 12 * Float.BYTES; // 3 position + 2 UV offset
 
-            int positionLocation = GL20.glGetAttribLocation(shaderProgram, "vertexPosition");
-            int normalLocation = GL20.glGetAttribLocation(shaderProgram, "normalPosition");
-            int uvLocation = GL20.glGetAttribLocation(shaderProgram, "vertexUV");
-            int colorLocation = GL20.glGetAttribLocation(shaderProgram, "matColor");
+
             int textureSamplerLocation = GL20.glGetUniformLocation(shaderProgram, "textureSampler");
             int useTextureLocation = GL20.glGetUniformLocation(shaderProgram, "useTexture");
             int brightnessLocation = GL20.glGetUniformLocation(shaderProgram, "brightness");
