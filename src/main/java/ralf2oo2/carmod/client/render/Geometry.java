@@ -7,7 +7,9 @@ import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Geometry {
     private static final String vertexShaderSource =
@@ -77,6 +79,7 @@ public class Geometry {
 
     //Geometry data
     private List<Material> materials;
+    private Map<Integer, List<RenderwareBinaryStream.Triangle>> trianglesByMaterial;
     List<Vertex>[] verticesByMaterial;
     List<Integer>[] indexByMaterial;
 
@@ -85,7 +88,7 @@ public class Geometry {
         if(shaderProgram == 0){
             compileShaders();
         }
-        populateVertexList();
+        populateTriangles();
         initBuffers();
     }
 
@@ -93,79 +96,85 @@ public class Geometry {
         return name;
     }
 
-    public void populateVertexList(){
+    public void populateTriangles(){
         materials = getMaterialListForGeometry();
         RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryBinaryStream);
-
-        ArrayList<RenderwareBinaryStream.Vector3d> vertices = geometry.morphTargets().get(0).vertices();
-        ArrayList<RenderwareBinaryStream.Vector3d> normals = geometry.morphTargets().get(0).normals();
-        RenderwareBinaryStream.UvLayer uvLayer = geometry.geometry().uvLayers().get(0);
-
-        verticesByMaterial = new List[materials.size()];
-        indexByMaterial = new List[materials.size()]; // TODO: actual index format
-
-        for(int i = 0; i < verticesByMaterial.length; i++){
-            verticesByMaterial[i] = new ArrayList<>();
-            indexByMaterial[i] = new ArrayList<>();
-        }
-
         List<RenderwareBinaryStream.Triangle> triangles =  geometry.geometry().triangles();
-
-        for(RenderwareBinaryStream.Triangle triangle : triangles){
-
-            int materialId = triangle.materialId();
-
-            int[] triangleVertexIndices = {
-              triangle.vertex1(),
-              triangle.vertex2(),
-              triangle.vertex3()
-            };
-
-            for(int i = 0; i < verticesByMaterial.length; i++){
-                int vertIndex = triangleVertexIndices[i];
-
-                Vertex vertex = new Vertex();
-
-                // Fill vertex position
-                RenderwareBinaryStream.Vector3d vert = vertices.get(vertIndex);
-                vertex.x = vert.x();
-                vertex.y = vert.y();
-                vertex.z = vert.z();
-
-                // Fill vertex normal
-                RenderwareBinaryStream.Vector3d normal = normals.get(vertIndex);
-                vertex.normalX = normal.x();
-                vertex.normalY = normal.y();
-                vertex.normalZ = normal.z();
-
-                // Fill vertex UV coordinates
-                RenderwareBinaryStream.TexCoord uv = uvLayer.texCoords().get(vertIndex);
-                vertex.uOffset = uv.u();
-                vertex.vOffset = uv.v();
-
-                // Fill vertex color from the material (using materialId)
-                vertex.r = materials.get(materialId).color.r;
-                vertex.g = materials.get(materialId).color.g;
-                vertex.b = materials.get(materialId).color.b;
-                vertex.a = materials.get(materialId).color.a;
-
-                // Add this vertex to the verticesByMaterial list for the given material
-                // Check if this vertex already exists in verticesByMaterial to avoid duplication
-                List<Vertex> currentVertices = verticesByMaterial[materialId];
-                if (!currentVertices.contains(vertex)) {
-                    currentVertices.add(vertex);
-                } else {
-                    System.out.println("duplicate vertex");
-                }
-
-                // Find the index of this vertex (whether newly added or already present)
-                int vertexIndexInMaterial = currentVertices.indexOf(vertex);
-
-                // Add this index to the index buffer for this material
-                indexByMaterial[materialId].add(vertexIndexInMaterial);
-            }
+        trianglesByMaterial = new HashMap<>();
+        for (RenderwareBinaryStream.Triangle triangle : triangles) {
+            trianglesByMaterial
+                    .computeIfAbsent(triangle.materialId(), k -> new ArrayList<>())
+                    .add(triangle);
         }
     }
+
+//    public void populateVertexList(){
+//        materials = getMaterialListForGeometry();
+//
+//
+//        verticesByMaterial = new List[materials.size()];
+//        indexByMaterial = new List[materials.size()]; // TODO: actual index format
+//
+//        for(int i = 0; i < verticesByMaterial.length; i++){
+//            verticesByMaterial[i] = new ArrayList<>();
+//            indexByMaterial[i] = new ArrayList<>();
+//        }
+//
+//        for(RenderwareBinaryStream.Triangle triangle : triangles){
+//
+//            int materialId = triangle.materialId();
+//
+//            int[] triangleVertexIndices = {
+//              triangle.vertex1(),
+//              triangle.vertex2(),
+//              triangle.vertex3()
+//            };
+//
+//            for(int i = 0; i < verticesByMaterial.length; i++){
+//                int vertIndex = triangleVertexIndices[i];
+//
+//                Vertex vertex = new Vertex();
+//
+//                // Fill vertex position
+//                RenderwareBinaryStream.Vector3d vert = vertices.get(vertIndex);
+//                vertex.x = vert.x();
+//                vertex.y = vert.y();
+//                vertex.z = vert.z();
+//
+//                // Fill vertex normal
+//                RenderwareBinaryStream.Vector3d normal = normals.get(vertIndex);
+//                vertex.normalX = normal.x();
+//                vertex.normalY = normal.y();
+//                vertex.normalZ = normal.z();
+//
+//                // Fill vertex UV coordinates
+//                RenderwareBinaryStream.TexCoord uv = uvLayer.texCoords().get(vertIndex);
+//                vertex.uOffset = uv.u();
+//                vertex.vOffset = uv.v();
+//
+//                // Fill vertex color from the material (using materialId)
+//                vertex.r = materials.get(materialId).color.r;
+//                vertex.g = materials.get(materialId).color.g;
+//                vertex.b = materials.get(materialId).color.b;
+//                vertex.a = materials.get(materialId).color.a;
+//
+//                // Add this vertex to the verticesByMaterial list for the given material
+//                // Check if this vertex already exists in verticesByMaterial to avoid duplication
+//                List<Vertex> currentVertices = verticesByMaterial[materialId];
+//                if (!currentVertices.contains(vertex)) {
+//                    currentVertices.add(vertex);
+//                } else {
+//                    System.out.println("duplicate vertex");
+//                }
+//
+//                // Find the index of this vertex (whether newly added or already present)
+//                int vertexIndexInMaterial = currentVertices.indexOf(vertex);
+//
+//                // Add this index to the index buffer for this material
+//                indexByMaterial[materialId].add(vertexIndexInMaterial);
+//            }
+//        }
+//    }
 
     public void initBuffers(){
 
@@ -175,17 +184,28 @@ public class Geometry {
 
         GL30.glBindVertexArray(vao);
 
-        int totalVertices = calculateTotalVertices();
+        RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryBinaryStream);
+
+        ArrayList<RenderwareBinaryStream.Vector3d> vertices = geometry.morphTargets().get(0).vertices();
+        ArrayList<RenderwareBinaryStream.Vector3d> normals = geometry.morphTargets().get(0).normals();
+        ArrayList<RenderwareBinaryStream.Rgba> colors = geometry.geometry().prelitColors();
+        RenderwareBinaryStream.UvLayer uvLayer = geometry.geometry().uvLayers().get(0);
+
+        int totalVertices = vertices.size();
 
         FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(totalVertices * 12); // TODO: Replace 12 with vertex size later
 
-        for (int i = 0; i < verticesByMaterial.length; i++) {
-            for (Vertex vertex : verticesByMaterial[i]) {
-                vertexBuffer.put(vertex.x).put(vertex.y).put(vertex.z);
-                vertexBuffer.put(vertex.normalX).put(vertex.normalY).put(vertex.normalZ);
-                vertexBuffer.put(vertex.uOffset).put(vertex.vOffset);
-                vertexBuffer.put(vertex.r / 255f).put(vertex.g / 255f).put(vertex.b / 255f).put(vertex.a / 255f);
+        for (int i = 0; i < totalVertices; i++) {
+            vertexBuffer.put(vertices.get(i).x()).put(vertices.get(i).y()).put(vertices.get(i).z());
+            vertexBuffer.put(normals.get(i).x()).put(normals.get(i).y()).put(normals.get(i).z());
+            vertexBuffer.put(uvLayer.texCoords().get(i).v()).put(uvLayer.texCoords().get(i).u());
+            if(geometry.isPrelit()){
+                vertexBuffer.put(colors.get(i).r() / 255f).put(colors.get(i).g() / 255f).put(colors.get(i).b() / 255f).put(colors.get(i).a() / 255f);
             }
+            else{
+                vertexBuffer.put(1f).put(1f).put(1f).put(1f);
+            }
+
         }
         vertexBuffer.flip();
 
@@ -216,20 +236,16 @@ public class Geometry {
         GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, false, stride, 8 * Float.BYTES);
         GL20.glEnableVertexAttribArray(colorLocation);
 
-        ibos = new int[materials.size()];
+        ibos = new int[trianglesByMaterial.size()];
 
-        for (int materialId = 0; materialId < materials.size(); materialId++) {
+        for (int materialId = 0; materialId < trianglesByMaterial.size(); materialId++) {
             ibos[materialId] = GL15.glGenBuffers();
 
-            List<Integer> indices = indexByMaterial[materialId];
+            ArrayList<RenderwareBinaryStream.Triangle> triangles = (ArrayList<RenderwareBinaryStream.Triangle>) trianglesByMaterial.get(materialId);
 
-            if (indices.isEmpty()) {
-                continue; // Skip if no indices for this material
-            }
-
-            IntBuffer indexBuffer = BufferUtils.createIntBuffer(indices.size());
-            for (int index : indices) {
-                indexBuffer.put(index);
+            IntBuffer indexBuffer = BufferUtils.createIntBuffer(triangles.size() * 3);
+            for (int triangleIndex = 0; triangleIndex < triangles.size(); triangleIndex++) {
+                indexBuffer.put(triangles.get(triangleIndex).vertex1()).put(triangles.get(triangleIndex).vertex3()).put(triangles.get(triangleIndex).vertex2());
             }
             indexBuffer.flip(); // Flip buffer for writing
 
@@ -284,7 +300,7 @@ public class Geometry {
         matrixBuffer.flip();
         projectionBuffer.flip();
 
-        for (int materialId = 0; materialId < materials.size(); materialId++) {
+        for (int materialId = 0; materialId < trianglesByMaterial.size(); materialId++) {
             // Bind the IBO for this material
             GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibos[materialId]);
 
@@ -312,7 +328,7 @@ public class Geometry {
             GL20.glUniform3f(viePosLocation, playerX, playerY, playerZ);
 
             // Draw the triangles for this material using the indices from the IBO
-            GL11.glDrawElements(GL11.GL_TRIANGLES, indexByMaterial[materialId].size(), GL11.GL_UNSIGNED_INT, 0);
+            GL11.glDrawElements(GL11.GL_TRIANGLES, trianglesByMaterial.get(materialId).size(), GL11.GL_UNSIGNED_INT, 0);
         }
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
