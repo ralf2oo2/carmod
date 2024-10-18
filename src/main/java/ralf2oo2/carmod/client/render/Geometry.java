@@ -76,6 +76,7 @@ public class Geometry {
     //Geometry data
     private List<Material> materials;
     List<Vertex>[] verticesByMaterial;
+    List<Integer>[] indexByMaterial;
 
     public Geometry(RenderwareBinaryStream geometryBinaryStream){
         this.geometryBinaryStream = geometryBinaryStream;
@@ -94,73 +95,71 @@ public class Geometry {
         materials = getMaterialListForGeometry();
         RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryBinaryStream);
 
-        verticesByMaterial = new List[materials.size()];
-        for(int i = 0; i < verticesByMaterial.length; i++){
-            verticesByMaterial[i] = new ArrayList<>();
-        }
-
-        List<RenderwareBinaryStream.Triangle> triangles =  geometry.geometry().triangles();
         ArrayList<RenderwareBinaryStream.Vector3d> vertices = geometry.morphTargets().get(0).vertices();
         ArrayList<RenderwareBinaryStream.Vector3d> normals = geometry.morphTargets().get(0).normals();
         RenderwareBinaryStream.UvLayer uvLayer = geometry.geometry().uvLayers().get(0);
 
+        verticesByMaterial = new List[materials.size()];
+        indexByMaterial = new List[materials.size()]; // TODO: actual index format
+
+        for(int i = 0; i < verticesByMaterial.length; i++){
+            verticesByMaterial[i] = new ArrayList<>();
+            indexByMaterial[i] = new ArrayList<>();
+        }
+
+        List<RenderwareBinaryStream.Triangle> triangles =  geometry.geometry().triangles();
+
         for(RenderwareBinaryStream.Triangle triangle : triangles){
-            Vertex vertex1 = new Vertex();
-            Vertex vertex2 = new Vertex();
-            Vertex vertex3 = new Vertex();
 
-            RenderwareBinaryStream.Vector3d vert1 = vertices.get(triangle.vertex1());
-            RenderwareBinaryStream.Vector3d vert2 = vertices.get(triangle.vertex2());
-            RenderwareBinaryStream.Vector3d vert3 = vertices.get(triangle.vertex3());
+            int materialId = triangle.materialId();
 
-            vertex1.x = vert1.x();
-            vertex1.y = vert1.y();
-            vertex1.z = vert1.z();
-            vertex2.x = vert2.x();
-            vertex2.y = vert2.y();
-            vertex2.z = vert2.z();
-            vertex3.x = vert3.x();
-            vertex3.y = vert3.y();
-            vertex3.z = vert3.z();
+            int[] triangleVertexIndices = {
+              triangle.vertex1(),
+              triangle.vertex2(),
+              triangle.vertex3()
+            };
 
-            vertex1.r = materials.get(triangle.materialId()).color.r;
-            vertex2.r = materials.get(triangle.materialId()).color.r;
-            vertex3.r = materials.get(triangle.materialId()).color.r;
-            vertex1.g = materials.get(triangle.materialId()).color.g;
-            vertex2.g = materials.get(triangle.materialId()).color.g;
-            vertex3.g = materials.get(triangle.materialId()).color.g;
-            vertex1.b = materials.get(triangle.materialId()).color.b;
-            vertex2.b = materials.get(triangle.materialId()).color.b;
-            vertex3.b = materials.get(triangle.materialId()).color.b;
-            vertex1.a = materials.get(triangle.materialId()).color.a;
-            vertex2.a = materials.get(triangle.materialId()).color.a;
-            vertex3.a = materials.get(triangle.materialId()).color.a;
+            for(int i = 0; i < triangleVertexIndices.length; i++){
+                int vertIndex = triangleVertexIndices[i];
 
-            RenderwareBinaryStream.TexCoord uv1 = uvLayer.texCoords().get(triangle.vertex1());
-            vertex1.uOffset = uv1.u();
-            vertex1.vOffset = uv1.v();
-            RenderwareBinaryStream.TexCoord uv2 = uvLayer.texCoords().get(triangle.vertex2());
-            vertex2.uOffset = uv2.u();
-            vertex2.vOffset = uv2.v();
-            RenderwareBinaryStream.TexCoord uv3 = uvLayer.texCoords().get(triangle.vertex3());
-            vertex3.uOffset = uv3.u();
-            vertex3.vOffset = uv3.v();
-            RenderwareBinaryStream.Vector3d normal1 = normals.get(triangle.vertex1());
-            vertex1.normalX = normal1.x();
-            vertex1.normalY = normal1.y();
-            vertex1.normalZ = normal1.z();
-            RenderwareBinaryStream.Vector3d normal2 = normals.get(triangle.vertex2());
-            vertex2.normalX = normal2.x();
-            vertex2.normalY = normal2.y();
-            vertex2.normalZ = normal2.z();
-            RenderwareBinaryStream.Vector3d normal3 = normals.get(triangle.vertex3());
-            vertex3.normalX = normal3.x();
-            vertex3.normalY = normal3.y();
-            vertex3.normalZ = normal3.z();
+                Vertex vertex = new Vertex();
 
-            verticesByMaterial[triangle.materialId()].add(vertex1);
-            verticesByMaterial[triangle.materialId()].add(vertex2);
-            verticesByMaterial[triangle.materialId()].add(vertex3);
+                // Fill vertex position
+                RenderwareBinaryStream.Vector3d vert = vertices.get(vertIndex);
+                vertex.x = vert.x();
+                vertex.y = vert.y();
+                vertex.z = vert.z();
+
+                // Fill vertex normal
+                RenderwareBinaryStream.Vector3d normal = normals.get(vertIndex);
+                vertex.normalX = normal.x();
+                vertex.normalY = normal.y();
+                vertex.normalZ = normal.z();
+
+                // Fill vertex UV coordinates
+                RenderwareBinaryStream.TexCoord uv = uvLayer.texCoords().get(vertIndex);
+                vertex.uOffset = uv.u();
+                vertex.vOffset = uv.v();
+
+                // Fill vertex color from the material (using materialId)
+                vertex.r = materials.get(materialId).color.r;
+                vertex.g = materials.get(materialId).color.g;
+                vertex.b = materials.get(materialId).color.b;
+                vertex.a = materials.get(materialId).color.a;
+
+                // Add this vertex to the verticesByMaterial list for the given material
+                // Check if this vertex already exists in verticesByMaterial to avoid duplication
+                List<Vertex> currentVertices = verticesByMaterial[materialId];
+                if (!currentVertices.contains(vertex)) {
+                    currentVertices.add(vertex);
+                }
+
+                // Find the index of this vertex (whether newly added or already present)
+                int vertexIndexInMaterial = currentVertices.indexOf(vertex);
+
+                // Add this index to the index buffer for this material
+                indexByMaterial[materialId].add(vertexIndexInMaterial);
+            }
         }
     }
 
