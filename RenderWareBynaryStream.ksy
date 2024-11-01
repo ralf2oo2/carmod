@@ -82,17 +82,18 @@ types:
         type: u4
         enum: sections
         if: _parent.size > 4
-      - id: unknown
+      - id: size
         type: u4
         if: _parent.size > 4
       - id: unknown2
         type: u4
-        if: _parent.size > 4  
+        if: _parent.size > 4
       - id: extension
         type:
           switch-on: code
           cases:
             sections::bin_mesh_plg: geometry_extension
+            sections::frame: frame_extension
   geometry_extension:
     seq:
       - id: face_type
@@ -105,6 +106,12 @@ types:
         type: rp_mesh
         repeat: expr
         repeat-expr: num_splits
+  frame_extension:
+    seq:
+      - id: name
+        type: str
+        encoding: UTF-8
+        size: _parent.size
   rp_mesh:
     seq:
       - id: num_indices
