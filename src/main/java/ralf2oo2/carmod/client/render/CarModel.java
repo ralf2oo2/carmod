@@ -5,9 +5,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import org.lwjgl.opengl.GL11;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +19,7 @@ public class CarModel {
     private List<RenderwareBinaryStream> textureList;
     private RenderwareBinaryStream.ListWithHeader frameList;
     private List<String> frameNames = new ArrayList<>();
-    private List<String> visibleModels = new ArrayList<>();
+    private List<String> modelBlacklist = new ArrayList<>();
 
     public static CarModel getCarModel(String name){
         if(name == null || name.isEmpty()){
@@ -47,37 +45,12 @@ public class CarModel {
         } catch (Exception e){
             System.out.println("Failed to load car model");
         }
-        visibleModels.add("chassis");
-        visibleModels.add("interior");
-        visibleModels.add("glass_interior");
-        visibleModels.add("dash_on");
-        visibleModels.add("lights");
-        visibleModels.add("engine");
-        visibleModels.add("headlights");
-        visibleModels.add("taillights");
-        visibleModels.add("exhaust");
-        visibleModels.add("petrolcap");
-        visibleModels.add("indicator_lf");
-        visibleModels.add("indicator_rf");
-        visibleModels.add("indicator_rr");
-        visibleModels.add("indicator_lr");
-        visibleModels.add("breaklight_l");
-        visibleModels.add("breaklight_r");
-        visibleModels.add("reversinglight_r");
-        visibleModels.add("reversinglight_l");
-        visibleModels.add("foglight_l");
-        visibleModels.add("foglight_r");
-        visibleModels.add("lights_glass");
-        visibleModels.add("detail_glass");
-        visibleModels.add("door_lf_ok");
-        visibleModels.add("door_rf_ok");
-        visibleModels.add("bonnet_ok");
-        visibleModels.add("bump_front_ok");
-        visibleModels.add("bump_rear_ok");
-        visibleModels.add("boot_ok");
-        visibleModels.add("windscreen_ok");
-        visibleModels.add("steering_ok");
         loadData();
+        for(int i = 0; i < frameNames.size(); i++){
+            if(frameNames.get(i).endsWith("dam") || frameNames.get(i).endsWith("dummy")){
+                modelBlacklist.add(frameNames.get(i));
+            }
+        }
     }
 
     public String getName(){
@@ -109,6 +82,7 @@ public class CarModel {
             RenderwareBinaryStream.StructExtension extension = (RenderwareBinaryStream.StructExtension) stream.body();
             RenderwareBinaryStream.FrameExtension frameExtension = (RenderwareBinaryStream.FrameExtension) extension.extension();
             frameNames.add(frameExtension.name());
+            System.out.println("Added vehicle part: " + frameExtension.name());
         }
     }
 
@@ -118,7 +92,7 @@ public class CarModel {
         GL11.glTranslatef(0, (float)1, 0);
         for(int i = 0; i < atomicList.size(); i++){
             RenderwareBinaryStream.StructAtomic structAtomic = getStructAtomic(atomicList.get(i));
-            if(!visibleModels.contains(frameNames.get((int)structAtomic.frameIndex()))){
+            if(modelBlacklist.contains(frameNames.get((int)structAtomic.frameIndex()))){
                 continue;
             }
             RenderwareBinaryStream.Frame frame = getStructFrameList(frameList).frames().get((int)structAtomic.frameIndex());
