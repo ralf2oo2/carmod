@@ -17,7 +17,8 @@ public class Geometry {
                     + "in vec3 vertexPosition;\n"
                     + "in vec3 normalPosition;\n"
                     + "in vec2 vertexUV;\n"
-                    + "in vec4 matColor;\n"
+                    + "uniform vec4 matColor;\n"
+                    + "in vec4 prelitColor;\n"
                     + "uniform mat4 modelViewMatrix;\n"
                     + "uniform mat4 projectionMatrix;\n"
                     + "out vec3 outNormal;\n"
@@ -27,7 +28,7 @@ public class Geometry {
                     + "void main() {\n"
                     + "    outNormal = normalPosition;\n"
                     + "    outUV = vertexUV;\n"
-                    + "    outColor = matColor;\n"
+                    + "    outColor = matColor + prelitColor;\n"
                     + "    gl_Position = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);\n"
                     + "    mat4 cameraMatrix = inverse(modelViewMatrix);\n"
                     + "    mat4 modelMatrix = modelViewMatrix * cameraMatrix;\n"
@@ -205,12 +206,12 @@ public class Geometry {
         for (int i = 0; i < totalVertices; i++) {
             vertexBuffer.put(vertices.get(i).x()).put(vertices.get(i).y()).put(vertices.get(i).z());
             vertexBuffer.put(normals.get(i).x()).put(normals.get(i).y()).put(normals.get(i).z());
-            vertexBuffer.put(uvLayer.texCoords().get(i).v()).put(uvLayer.texCoords().get(i).u());
+            vertexBuffer.put(uvLayer.texCoords().get(i).u()).put(uvLayer.texCoords().get(i).v());
             if(geometry.isPrelit()){
                 vertexBuffer.put(colors.get(i).r() / 255f).put(colors.get(i).g() / 255f).put(colors.get(i).b() / 255f).put(colors.get(i).a() / 255f);
             }
             else{
-                vertexBuffer.put(1f).put(1f).put(1f).put(1f);
+                vertexBuffer.put(0f).put(0f).put(0f).put(0f);
             }
 
         }
@@ -225,7 +226,7 @@ public class Geometry {
         int positionLocation = GL20.glGetAttribLocation(shaderProgram, "vertexPosition");
         int normalLocation = GL20.glGetAttribLocation(shaderProgram, "normalPosition");
         int uvLocation = GL20.glGetAttribLocation(shaderProgram, "vertexUV");
-        int colorLocation = GL20.glGetAttribLocation(shaderProgram, "matColor");
+        int colorLocation = GL20.glGetAttribLocation(shaderProgram, "prelitColor");
 
         // Position
         GL20.glVertexAttribPointer(positionLocation, 3, GL11.GL_FLOAT, false, stride, 0);
@@ -293,6 +294,7 @@ public class Geometry {
         int ambientLocation = GL20.glGetUniformLocation(shaderProgram, "ambientIntensity");
         int diffuseLocation = GL20.glGetUniformLocation(shaderProgram, "diffuseIntensity");
         int specularLocation = GL20.glGetUniformLocation(shaderProgram, "specularIntensity");
+        int materialColorLocation = GL20.glGetUniformLocation(shaderProgram, "matColor");
         int lightPosLocation = GL20.glGetUniformLocation(shaderProgram, "lightPos");
         int lightColorLocation = GL20.glGetUniformLocation(shaderProgram, "lightColor");
         int viePosLocation = GL20.glGetUniformLocation(shaderProgram, "viewPos");
@@ -313,13 +315,21 @@ public class Geometry {
 
         for (int splitIndex = 0; splitIndex < geometryExtension.splits().size(); splitIndex++) {
             RenderwareBinaryStream.RpMesh rpMesh = geometryExtension.splits().get(splitIndex);
+            Material material = materials.get((int)rpMesh.matIndex());
 
 
             // Bind the IBO for this material
             GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibos[splitIndex]);
 
-            if(materials.get((int)rpMesh.matIndex()).hasTexture){
-                int textureId = TxdTextureRegistry.getTextureId(materials.get((int)rpMesh.matIndex()).texture.name.replace("\0", ""));
+            if (material.color.a < 255) {
+                GL11.glEnable(GL11.GL_BLEND);
+                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            } else {
+                GL11.glDisable(GL11.GL_BLEND);
+            }
+
+            if(material.hasTexture){
+                int textureId = TxdTextureRegistry.getTextureId(material.texture.name.replace("\0", ""));
                 //((Minecraft)FabricLoader.getInstance().getGameInstance()).textureManager.getTextureId("/gui/furnace.png");
                 GL13.glActiveTexture(GL13.GL_TEXTURE0);
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
@@ -328,14 +338,15 @@ public class Geometry {
             } else {
                 GL20.glUniform1i(useTextureLocation, 0);
             }
+            GL20.glUniform4f(materialColorLocation, (float)material.color.r / 255f, (float)material.color.g / 255f, (float)material.color.b / 255f, (float)material.color.a / 255f);
 
             GL20.glUniformMatrix4(modelViewMatrixLocation, false, matrixBuffer);
             GL20.glUniformMatrix4(projectionMatrixLocation, false, projectionBuffer);
 
             GL20.glUniform1f(brightnessLocation, brightness);//
-            GL20.glUniform1f(ambientLocation, materials.get(splitIndex).ambient);//
-            GL20.glUniform1f(diffuseLocation, materials.get(splitIndex).diffuse);
-            GL20.glUniform1f(specularLocation, materials.get(splitIndex).specular);
+            GL20.glUniform1f(ambientLocation, material.ambient);//
+            GL20.glUniform1f(diffuseLocation, material.diffuse);
+            GL20.glUniform1f(specularLocation, material.specular);
 
             GL20.glUniform3f(lightPosLocation, 0.0f, 00.0f, 10.0f);
             GL20.glUniform3f(lightColorLocation, 1, 1, 1);
