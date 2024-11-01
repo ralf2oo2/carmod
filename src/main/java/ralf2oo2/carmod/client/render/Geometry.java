@@ -79,7 +79,8 @@ public class Geometry {
 
     //Geometry data
     private List<Material> materials;
-    private Map<Integer, List<RenderwareBinaryStream.Triangle>> trianglesByMaterial;
+    public RenderwareBinaryStream.GeometryExtension geometryExtension;
+    //private Map<Integer, List<RenderwareBinaryStream.Triangle>> trianglesByMaterial;
     List<Vertex>[] verticesByMaterial;
     List<Integer>[] indexByMaterial;
 
@@ -88,7 +89,13 @@ public class Geometry {
         if(shaderProgram == 0){
             compileShaders();
         }
-        populateTriangles();
+
+        RenderwareBinaryStream.StructExtension structExtension = (RenderwareBinaryStream.StructExtension) ((RenderwareBinaryStream.ListWithHeader)geometryBinaryStream.body()).entries().get(1).body();
+        geometryExtension = (RenderwareBinaryStream.GeometryExtension) structExtension.extension();
+
+        materials = getMaterialListForGeometry();
+
+        //populateTriangles();
         initBuffers();
     }
 
@@ -96,17 +103,17 @@ public class Geometry {
         return name;
     }
 
-    public void populateTriangles(){
-        materials = getMaterialListForGeometry();
-        RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryBinaryStream);
-        List<RenderwareBinaryStream.Triangle> triangles =  geometry.geometry().triangles();
-        trianglesByMaterial = new HashMap<>();
-        for (RenderwareBinaryStream.Triangle triangle : triangles) {
-            trianglesByMaterial
-                    .computeIfAbsent(triangle.materialId(), k -> new ArrayList<>())
-                    .add(triangle);
-        }
-    }
+//    public void populateTriangles(){
+//        materials = getMaterialListForGeometry();
+//        RenderwareBinaryStream.StructGeometry geometry = getStructGeometry(geometryBinaryStream);
+//        List<RenderwareBinaryStream.Triangle> triangles =  geometry.geometry().triangles();
+//        trianglesByMaterial = new HashMap<>();
+//        for (RenderwareBinaryStream.Triangle triangle : triangles) {
+//            trianglesByMaterial
+//                    .computeIfAbsent(triangle.materialId(), k -> new ArrayList<>())
+//                    .add(triangle);
+//        }
+//    }
 
 //    public void populateVertexList(){
 //        materials = getMaterialListForGeometry();
@@ -236,21 +243,25 @@ public class Geometry {
         GL20.glVertexAttribPointer(colorLocation, 4, GL11.GL_FLOAT, false, stride, 8 * Float.BYTES);
         GL20.glEnableVertexAttribArray(colorLocation);
 
-        ibos = new int[trianglesByMaterial.size()];
+        ibos = new int[geometryExtension.splits().size()];
 
-        for (int materialId = 0; materialId < trianglesByMaterial.size(); materialId++) {
-            ibos[materialId] = GL15.glGenBuffers();
+        for (int splitIndex = 0; splitIndex < geometryExtension.splits().size(); splitIndex++) {
+            RenderwareBinaryStream.RpMesh rpMesh = geometryExtension.splits().get(splitIndex);
+            ibos[splitIndex] = GL15.glGenBuffers();
 
-            ArrayList<RenderwareBinaryStream.Triangle> triangles = (ArrayList<RenderwareBinaryStream.Triangle>) trianglesByMaterial.get(materialId);
+            //ArrayList<RenderwareBinaryStream.Triangle> triangles = (ArrayList<RenderwareBinaryStream.Triangle>) trianglesByMaterial.get(splitIndex);
 
-            IntBuffer indexBuffer = BufferUtils.createIntBuffer(triangles.size() * 3);
-            for (int triangleIndex = 0; triangleIndex < triangles.size(); triangleIndex++) {
-                indexBuffer.put(triangles.get(triangleIndex).vertex1()).put(triangles.get(triangleIndex).vertex2()).put(triangles.get(triangleIndex).vertex3());
+            IntBuffer indexBuffer = BufferUtils.createIntBuffer((int)rpMesh.numIndices());
+            for(int i = 0; i < rpMesh.numIndices(); i++){
+                indexBuffer.put((int)(long)rpMesh.indices().get(i));
             }
+//            for (int triangleIndex = 0; triangleIndex < triangles.size(); triangleIndex++) {
+//                indexBuffer.put(triangles.get(triangleIndex).vertex1()).put(triangles.get(triangleIndex).vertex2()).put(triangles.get(triangleIndex).vertex3());
+//            }
             indexBuffer.flip(); // Flip buffer for writing
 
             // Bind and upload the index buffer to the IBO
-            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibos[materialId]);
+            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibos[splitIndex]);
             GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indexBuffer, GL15.GL_STATIC_DRAW);
         }
 
@@ -300,12 +311,15 @@ public class Geometry {
         matrixBuffer.flip();
         projectionBuffer.flip();
 
-        for (int materialId = 0; materialId < trianglesByMaterial.size(); materialId++) {
-            // Bind the IBO for this material
-            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibos[materialId]);
+        for (int splitIndex = 0; splitIndex < geometryExtension.splits().size(); splitIndex++) {
+            RenderwareBinaryStream.RpMesh rpMesh = geometryExtension.splits().get(splitIndex);
 
-            if(materials.get(materialId).hasTexture){
-                int textureId = TxdTextureRegistry.getTextureId(materials.get(materialId).texture.name.replace("\0", ""));
+
+            // Bind the IBO for this material
+            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ibos[splitIndex]);
+
+            if(materials.get((int)rpMesh.matIndex()).hasTexture){
+                int textureId = TxdTextureRegistry.getTextureId(materials.get((int)rpMesh.matIndex()).texture.name.replace("\0", ""));
                 //((Minecraft)FabricLoader.getInstance().getGameInstance()).textureManager.getTextureId("/gui/furnace.png");
                 GL13.glActiveTexture(GL13.GL_TEXTURE0);
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
@@ -319,16 +333,16 @@ public class Geometry {
             GL20.glUniformMatrix4(projectionMatrixLocation, false, projectionBuffer);
 
             GL20.glUniform1f(brightnessLocation, brightness);//
-            GL20.glUniform1f(ambientLocation, materials.get(materialId).ambient);//
-            GL20.glUniform1f(diffuseLocation, materials.get(materialId).diffuse);
-            GL20.glUniform1f(specularLocation, materials.get(materialId).specular);
+            GL20.glUniform1f(ambientLocation, materials.get(splitIndex).ambient);//
+            GL20.glUniform1f(diffuseLocation, materials.get(splitIndex).diffuse);
+            GL20.glUniform1f(specularLocation, materials.get(splitIndex).specular);
 
             GL20.glUniform3f(lightPosLocation, 0.0f, 00.0f, 10.0f);
             GL20.glUniform3f(lightColorLocation, 1, 1, 1);
             GL20.glUniform3f(viePosLocation, playerX, playerY, playerZ);
 
             // Draw the triangles for this material using the indices from the IBO
-            GL11.glDrawElements(GL11.GL_TRIANGLES, trianglesByMaterial.get(materialId).size(), GL11.GL_UNSIGNED_INT, 0);
+            GL11.glDrawElements(GL11.GL_TRIANGLES, (int)rpMesh.numIndices(), GL11.GL_UNSIGNED_INT, 0);
         }
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
