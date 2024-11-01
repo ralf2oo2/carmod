@@ -245,7 +245,7 @@ public class Geometry {
 
             IntBuffer indexBuffer = BufferUtils.createIntBuffer(triangles.size() * 3);
             for (int triangleIndex = 0; triangleIndex < triangles.size(); triangleIndex++) {
-                indexBuffer.put(triangles.get(triangleIndex).vertex1()).put(triangles.get(triangleIndex).vertex3()).put(triangles.get(triangleIndex).vertex2());
+                indexBuffer.put(triangles.get(triangleIndex).vertex1()).put(triangles.get(triangleIndex).vertex2()).put(triangles.get(triangleIndex).vertex3());
             }
             indexBuffer.flip(); // Flip buffer for writing
 

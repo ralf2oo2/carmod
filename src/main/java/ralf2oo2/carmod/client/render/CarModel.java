@@ -106,15 +106,14 @@ public class CarModel {
 
         RenderwareBinaryStream.ListWithHeader entries = (RenderwareBinaryStream.ListWithHeader)((RenderwareBinaryStream.ListWithHeader)((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().get(0).body());
         for(RenderwareBinaryStream stream : entries.entries()){
-            byte[] array = (byte[])stream.body();
-            byte[] name = Arrays.copyOfRange(array, 12, array.length);
-            String namestr = new String(name, StandardCharsets.UTF_8);
-            System.out.println(namestr);
-            frameNames.add(namestr);
+            RenderwareBinaryStream.StructExtension extension = (RenderwareBinaryStream.StructExtension) stream.body();
+            RenderwareBinaryStream.FrameExtension frameExtension = (RenderwareBinaryStream.FrameExtension) extension.extension();
+            frameNames.add(frameExtension.name());
         }
     }
 
     public void render(double x, double y, double z, float brightness, PlayerEntity player){
+        GL11.glPushMatrix();
         GL11.glTranslatef((float)x, (float)y, (float)z);
         GL11.glTranslatef(0, (float)1, 0);
         for(int i = 0; i < atomicList.size(); i++){
@@ -128,6 +127,7 @@ public class CarModel {
             this.geometryList.get((int)structAtomic.geometryIndex()).render(brightness, (float)player.x, (float)player.y + player.eyeHeight, (float)player.z);
             GL11.glPopMatrix();
         }
+        GL11.glPopMatrix();
     }
 
     private void loadTextures(){

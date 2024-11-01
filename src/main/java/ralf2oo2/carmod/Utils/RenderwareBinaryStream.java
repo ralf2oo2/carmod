@@ -1,5 +1,4 @@
 package ralf2oo2.carmod.Utils;
-
 // This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
 
 import io.kaitai.struct.ByteBufferKaitaiStream;
@@ -8,8 +7,8 @@ import io.kaitai.struct.KaitaiStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.ArrayList;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -283,6 +282,12 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                         this.body = new StructString(_io__raw_body, this, _root);
                         break;
                     }
+                    case EXTENSION: {
+                        this._raw_body = this._io.readBytes(size());
+                        KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
+                        this.body = new StructExtension(_io__raw_body, this, _root);
+                        break;
+                    }
                     case MATERIAL_LIST: {
                         this._raw_body = this._io.readBytes(size());
                         KaitaiStream _io__raw_body = new ByteBufferKaitaiStream(_raw_body);
@@ -341,6 +346,35 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public Long numCameras() { return numCameras; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
+    public static class FrameExtension extends KaitaiStruct {
+        public static FrameExtension fromFile(String fileName) throws IOException {
+            return new FrameExtension(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public FrameExtension(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public FrameExtension(KaitaiStream _io, RenderwareBinaryStream.StructExtension _parent) {
+            this(_io, _parent, null);
+        }
+
+        public FrameExtension(KaitaiStream _io, RenderwareBinaryStream.StructExtension _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.name = new String(this._io.readBytes(_parent().size()), Charset.forName("UTF-8"));
+        }
+        private String name;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.StructExtension _parent;
+        public String name() { return name; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.StructExtension _parent() { return _parent; }
     }
 
     /**
@@ -702,6 +736,44 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public byte[] data() { return data; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.StructTextureData _parent() { return _parent; }
+    }
+    public static class RpMesh extends KaitaiStruct {
+        public static RpMesh fromFile(String fileName) throws IOException {
+            return new RpMesh(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public RpMesh(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public RpMesh(KaitaiStream _io, RenderwareBinaryStream.GeometryExtension _parent) {
+            this(_io, _parent, null);
+        }
+
+        public RpMesh(KaitaiStream _io, RenderwareBinaryStream.GeometryExtension _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.numIndices = this._io.readU4le();
+            this.matIndex = this._io.readU4le();
+            this.indices = new ArrayList<Long>();
+            for (int i = 0; i < numIndices(); i++) {
+                this.indices.add(this._io.readU4le());
+            }
+        }
+        private long numIndices;
+        private long matIndex;
+        private ArrayList<Long> indices;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.GeometryExtension _parent;
+        public long numIndices() { return numIndices; }
+        public long matIndex() { return matIndex; }
+        public ArrayList<Long> indices() { return indices; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.GeometryExtension _parent() { return _parent; }
     }
     public static class Rgba extends KaitaiStruct {
         public static Rgba fromFile(String fileName) throws IOException {
@@ -1408,6 +1480,47 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
     }
+    public static class GeometryExtension extends KaitaiStruct {
+        public static GeometryExtension fromFile(String fileName) throws IOException {
+            return new GeometryExtension(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public GeometryExtension(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public GeometryExtension(KaitaiStream _io, RenderwareBinaryStream.StructExtension _parent) {
+            this(_io, _parent, null);
+        }
+
+        public GeometryExtension(KaitaiStream _io, RenderwareBinaryStream.StructExtension _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.faceType = this._io.readU4le();
+            this.numSplits = this._io.readU4le();
+            this.numIndices = this._io.readU4le();
+            this.splits = new ArrayList<RpMesh>();
+            for (int i = 0; i < numSplits(); i++) {
+                this.splits.add(new RpMesh(this._io, this, _root));
+            }
+        }
+        private long faceType;
+        private long numSplits;
+        private long numIndices;
+        private ArrayList<RpMesh> splits;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.StructExtension _parent;
+        public long faceType() { return faceType; }
+        public long numSplits() { return numSplits; }
+        public long numIndices() { return numIndices; }
+        public ArrayList<RpMesh> splits() { return splits; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.StructExtension _parent() { return _parent; }
+    }
     public static class StructMaterial extends KaitaiStruct {
         public static StructMaterial fromFile(String fileName) throws IOException {
             return new StructMaterial(new ByteBufferKaitaiStream(fileName));
@@ -1460,6 +1573,64 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public float diffuse() { return diffuse; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
+    public static class StructExtension extends KaitaiStruct {
+        public static StructExtension fromFile(String fileName) throws IOException {
+            return new StructExtension(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public StructExtension(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public StructExtension(KaitaiStream _io, RenderwareBinaryStream _parent) {
+            this(_io, _parent, null);
+        }
+
+        public StructExtension(KaitaiStream _io, RenderwareBinaryStream _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            if (_parent().size() > 4) {
+                this.code = RenderwareBinaryStream.Sections.byId(this._io.readU4le());
+            }
+            if (_parent().size() > 4) {
+                this.size = this._io.readU4le();
+            }
+            if (_parent().size() > 4) {
+                this.unknown2 = this._io.readU4le();
+            }
+            {
+                Sections on = code();
+                if (on != null) {
+                    switch (code()) {
+                        case BIN_MESH_PLG: {
+                            this.extension = new GeometryExtension(this._io, this, _root);
+                            break;
+                        }
+                        case FRAME: {
+                            this.extension = new FrameExtension(this._io, this, _root);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        private Sections code;
+        private Long size;
+        private Long unknown2;
+        private KaitaiStruct extension;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream _parent;
+        public Sections code() { return code; }
+        public Long size() { return size; }
+        public Long unknown2() { return unknown2; }
+        public KaitaiStruct extension() { return extension; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream _parent() { return _parent; }
     }
     private Integer version;
     public Integer version() {
