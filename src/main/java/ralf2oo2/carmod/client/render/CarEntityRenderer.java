@@ -17,7 +17,7 @@ public class CarEntityRenderer extends EntityRenderer {
         CarModel carModel = CarModel.getCarModel(carEntity.carName);
         //System.out.println(((Minecraft)FabricLoader.getInstance().getGameInstance()).world.method_198(h));
         if(carModel != null){
-            carModel.render(x, y, z, carEntity.method_1394(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            carModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
         }
         //System.out.println(carEntity.method_1394(h));
     }

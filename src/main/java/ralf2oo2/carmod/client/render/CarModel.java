@@ -98,7 +98,7 @@ public class CarModel {
             RenderwareBinaryStream.Frame frame = getStructFrameList(frameList).frames().get((int)structAtomic.frameIndex());
             GL11.glPushMatrix();
             applyFrameTransformations(frame);
-            this.geometryList.get((int)structAtomic.geometryIndex()).render(brightness, (float)player.x, (float)player.y + player.eyeHeight, (float)player.z);
+            this.geometryList.get((int)structAtomic.geometryIndex()).render(brightness, (float)player.x, (float)player.y + player.standingEyeHeight, (float)player.z);
             GL11.glPopMatrix();
         }
         GL11.glPopMatrix();

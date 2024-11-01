@@ -23,16 +23,16 @@ public class CarEntity extends Entity {
         world.addParticle("note", (double)x, (double)y, (double)z, 24.0, 0.0, 0.0);
     }
 
-    @Override
-    public boolean method_1367(Vec3d arg) {
-        //System.out.println(arg.x + " " + arg.y + " " + arg.z);
-        return true;
-    }
-
-    @Override
-    public boolean method_1364(double d) {
-        return true;
-    }
+//    @Override
+//    public boolean (Vec3d arg) {
+//        //System.out.println(arg.x + " " + arg.y + " " + arg.z);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean method_1364(double d) {
+//        return true;
+//    }
 
     @Override
     protected void readNbt(NbtCompound nbt) {

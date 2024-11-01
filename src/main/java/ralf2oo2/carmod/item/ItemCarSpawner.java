@@ -22,7 +22,7 @@ public class ItemCarSpawner extends TemplateItem {
         carEntity.y = y + 1;
         carEntity.z = z;
         carEntity.carName = "test";
-        world.method_210(carEntity);
+        world.spawnEntity(carEntity);
         return true;
     }
 }
