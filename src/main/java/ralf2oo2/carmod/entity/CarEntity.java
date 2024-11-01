@@ -11,6 +11,8 @@ public class CarEntity extends Entity {
     public CarEntity(World world) {
         super(world);
         this.setBoundingBoxSpacing(3, 3);
+        this.renderDistanceMultiplier = 4;
+        this.ignoreFrustumCull = true;
     }
 
     @Override
