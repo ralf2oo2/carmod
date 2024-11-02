@@ -595,7 +595,9 @@ public class RenderwareBinaryStream extends KaitaiStruct {
             this.mipmapCount = this._io.readU1();
             this.texcodeType = this._io.readU1();
             this.flags = this._io.readU1();
-            this.palette = this._io.readBytes((depth() == 8 ? (256 * 4) : 0));
+            if (depth() == 8) {
+                this.palette = this._io.readBytes((256 * 4));
+            }
             this.dataSize = this._io.readU4le();
             this.data = this._io.readBytes(dataSize());
             this.mipmaps = new ArrayList<Mipmap>();
@@ -639,6 +641,44 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public ArrayList<Mipmap> mipmaps() { return mipmaps; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.ListWithHeader _parent() { return _parent; }
+    }
+    public static class ColFacegroup extends KaitaiStruct {
+        public static ColFacegroup fromFile(String fileName) throws IOException {
+            return new ColFacegroup(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColFacegroup(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColFacegroup(KaitaiStream _io, RenderwareBinaryStream.Col _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColFacegroup(KaitaiStream _io, RenderwareBinaryStream.Col _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.min = new ColVec3(this._io, this, _root);
+            this.max = new ColVec3(this._io, this, _root);
+            this.startFace = this._io.readU2le();
+            this.endFace = this._io.readU2le();
+        }
+        private ColVec3 min;
+        private ColVec3 max;
+        private int startFace;
+        private int endFace;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.Col _parent;
+        public ColVec3 min() { return min; }
+        public ColVec3 max() { return max; }
+        public int startFace() { return startFace; }
+        public int endFace() { return endFace; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.Col _parent() { return _parent; }
     }
 
     /**
@@ -775,6 +815,41 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.GeometryExtension _parent() { return _parent; }
     }
+    public static class ColSphere extends KaitaiStruct {
+        public static ColSphere fromFile(String fileName) throws IOException {
+            return new ColSphere(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColSphere(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColSphere(KaitaiStream _io, RenderwareBinaryStream.Col _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColSphere(KaitaiStream _io, RenderwareBinaryStream.Col _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.center = new ColVec3(this._io, this, _root);
+            this.radius = this._io.readF4le();
+            this.surface = new ColSurface(this._io, this, _root);
+        }
+        private ColVec3 center;
+        private float radius;
+        private ColSurface surface;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.Col _parent;
+        public ColVec3 center() { return center; }
+        public float radius() { return radius; }
+        public ColSurface surface() { return surface; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.Col _parent() { return _parent; }
+    }
     public static class Rgba extends KaitaiStruct {
         public static Rgba fromFile(String fileName) throws IOException {
             return new Rgba(new ByteBufferKaitaiStream(fileName));
@@ -812,6 +887,47 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public int a() { return a; }
         public RenderwareBinaryStream _root() { return _root; }
         public KaitaiStruct _parent() { return _parent; }
+    }
+    public static class ColFace extends KaitaiStruct {
+        public static ColFace fromFile(String fileName) throws IOException {
+            return new ColFace(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColFace(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColFace(KaitaiStream _io, RenderwareBinaryStream.Col _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColFace(KaitaiStream _io, RenderwareBinaryStream.Col _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.a = this._io.readU2le();
+            this.b = this._io.readU2le();
+            this.c = this._io.readU2le();
+            this.material = this._io.readU1();
+            this.light = this._io.readU1();
+        }
+        private int a;
+        private int b;
+        private int c;
+        private int material;
+        private int light;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.Col _parent;
+        public int a() { return a; }
+        public int b() { return b; }
+        public int c() { return c; }
+        public int material() { return material; }
+        public int light() { return light; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.Col _parent() { return _parent; }
     }
     public static class Sphere extends KaitaiStruct {
         public static Sphere fromFile(String fileName) throws IOException {
@@ -993,6 +1109,82 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.StructGeometry _parent() { return _parent; }
     }
+    public static class ColBounds extends KaitaiStruct {
+        public static ColBounds fromFile(String fileName) throws IOException {
+            return new ColBounds(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColBounds(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColBounds(KaitaiStream _io, RenderwareBinaryStream.ColHeader _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColBounds(KaitaiStream _io, RenderwareBinaryStream.ColHeader _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.min = new ColVec3(this._io, this, _root);
+            this.max = new ColVec3(this._io, this, _root);
+            this.center = new ColVec3(this._io, this, _root);
+            this.radius = this._io.readF4le();
+        }
+        private ColVec3 min;
+        private ColVec3 max;
+        private ColVec3 center;
+        private float radius;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.ColHeader _parent;
+        public ColVec3 min() { return min; }
+        public ColVec3 max() { return max; }
+        public ColVec3 center() { return center; }
+        public float radius() { return radius; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.ColHeader _parent() { return _parent; }
+    }
+    public static class ColSurface extends KaitaiStruct {
+        public static ColSurface fromFile(String fileName) throws IOException {
+            return new ColSurface(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColSurface(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColSurface(KaitaiStream _io, KaitaiStruct _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColSurface(KaitaiStream _io, KaitaiStruct _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.material = this._io.readU1();
+            this.flag = this._io.readU1();
+            this.brightness = this._io.readU1();
+            this.light = this._io.readU1();
+        }
+        private int material;
+        private int flag;
+        private int brightness;
+        private int light;
+        private RenderwareBinaryStream _root;
+        private KaitaiStruct _parent;
+        public int material() { return material; }
+        public int flag() { return flag; }
+        public int brightness() { return brightness; }
+        public int light() { return light; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public KaitaiStruct _parent() { return _parent; }
+    }
 
     /**
      * @see <a href="https://gtamods.com/wiki/Frame_List_(RW_Section)#Structure">Source</a>
@@ -1135,6 +1327,35 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public String value() { return value; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream _parent() { return _parent; }
+    }
+    public static class CollisionExtension extends KaitaiStruct {
+        public static CollisionExtension fromFile(String fileName) throws IOException {
+            return new CollisionExtension(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public CollisionExtension(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public CollisionExtension(KaitaiStream _io, RenderwareBinaryStream.StructExtension _parent) {
+            this(_io, _parent, null);
+        }
+
+        public CollisionExtension(KaitaiStream _io, RenderwareBinaryStream.StructExtension _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.collision = new Col(this._io, this, _root);
+        }
+        private Col collision;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.StructExtension _parent;
+        public Col collision() { return collision; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.StructExtension _parent() { return _parent; }
     }
 
     /**
@@ -1358,6 +1579,92 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.StructFrameList _parent() { return _parent; }
     }
+    public static class ColHeader extends KaitaiStruct {
+        public static ColHeader fromFile(String fileName) throws IOException {
+            return new ColHeader(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColHeader(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColHeader(KaitaiStream _io, RenderwareBinaryStream.Col _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColHeader(KaitaiStream _io, RenderwareBinaryStream.Col _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.ident = new String(this._io.readBytes(4), Charset.forName("ASCII"));
+            this.size = this._io.readU4le();
+            this.name = new String(this._io.readBytes(22), Charset.forName("ASCII"));
+            this.modelid = this._io.readU2le();
+            this.bounds = new ColBounds(this._io, this, _root);
+            this.numspheres = this._io.readU2le();
+            this.numboxes = this._io.readU2le();
+            this.numfaces = this._io.readU2le();
+            this.numlines = this._io.readU1();
+            this.unused = this._io.readU1();
+            this.flags = this._io.readU4le();
+            this.sphereoffset = this._io.readU4le();
+            this.boxoffset = this._io.readU4le();
+            this.lineoffset = this._io.readU4le();
+            this.vertexoffset = this._io.readU4le();
+            this.triangleoffset = this._io.readU4le();
+            this.planeoffset = this._io.readU4le();
+            this.numshadowmeshfaces = this._io.readU4le();
+            this.shadowvertexoffset = this._io.readU4le();
+            this.shadowfaceoffset = this._io.readU4le();
+        }
+        private String ident;
+        private long size;
+        private String name;
+        private int modelid;
+        private ColBounds bounds;
+        private int numspheres;
+        private int numboxes;
+        private int numfaces;
+        private int numlines;
+        private int unused;
+        private long flags;
+        private long sphereoffset;
+        private long boxoffset;
+        private long lineoffset;
+        private long vertexoffset;
+        private long triangleoffset;
+        private long planeoffset;
+        private long numshadowmeshfaces;
+        private long shadowvertexoffset;
+        private long shadowfaceoffset;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.Col _parent;
+        public String ident() { return ident; }
+        public long size() { return size; }
+        public String name() { return name; }
+        public int modelid() { return modelid; }
+        public ColBounds bounds() { return bounds; }
+        public int numspheres() { return numspheres; }
+        public int numboxes() { return numboxes; }
+        public int numfaces() { return numfaces; }
+        public int numlines() { return numlines; }
+        public int unused() { return unused; }
+        public long flags() { return flags; }
+        public long sphereoffset() { return sphereoffset; }
+        public long boxoffset() { return boxoffset; }
+        public long lineoffset() { return lineoffset; }
+        public long vertexoffset() { return vertexoffset; }
+        public long triangleoffset() { return triangleoffset; }
+        public long planeoffset() { return planeoffset; }
+        public long numshadowmeshfaces() { return numshadowmeshfaces; }
+        public long shadowvertexoffset() { return shadowvertexoffset; }
+        public long shadowfaceoffset() { return shadowfaceoffset; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.Col _parent() { return _parent; }
+    }
     public static class MaterialId extends KaitaiStruct {
         public static MaterialId fromFile(String fileName) throws IOException {
             return new MaterialId(new ByteBufferKaitaiStream(fileName));
@@ -1419,6 +1726,198 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.UvLayer _parent() { return _parent; }
     }
+    public static class Col extends KaitaiStruct {
+        public static Col fromFile(String fileName) throws IOException {
+            return new Col(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public Col(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public Col(KaitaiStream _io, RenderwareBinaryStream.CollisionExtension _parent) {
+            this(_io, _parent, null);
+        }
+
+        public Col(KaitaiStream _io, RenderwareBinaryStream.CollisionExtension _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.header = new ColHeader(this._io, this, _root);
+        }
+        private ArrayList<ColFace> shadowfaces;
+        public ArrayList<ColFace> shadowfaces() {
+            if (this.shadowfaces != null)
+                return this.shadowfaces;
+            long _pos = this._io.pos();
+            this._io.seek((header().shadowfaceoffset() + 4));
+            this.shadowfaces = new ArrayList<ColFace>();
+            for (int i = 0; i < header().numshadowmeshfaces(); i++) {
+                this.shadowfaces.add(new ColFace(this._io, this, _root));
+            }
+            this._io.seek(_pos);
+            return this.shadowfaces;
+        }
+        private ArrayList<ColFace> faces;
+        public ArrayList<ColFace> faces() {
+            if (this.faces != null)
+                return this.faces;
+            long _pos = this._io.pos();
+            this._io.seek((header().triangleoffset() + 4));
+            this.faces = new ArrayList<ColFace>();
+            for (int i = 0; i < header().numfaces(); i++) {
+                this.faces.add(new ColFace(this._io, this, _root));
+            }
+            this._io.seek(_pos);
+            return this.faces;
+        }
+        private Boolean hasfacegroups;
+        public Boolean hasfacegroups() {
+            if (this.hasfacegroups != null)
+                return this.hasfacegroups;
+            boolean _tmp = (boolean) (((header().flags() & 8) + 0) != 0);
+            this.hasfacegroups = _tmp;
+            return this.hasfacegroups;
+        }
+        private ArrayList<ColFacegroup> facegroups;
+        public ArrayList<ColFacegroup> facegroups() {
+            if (this.facegroups != null)
+                return this.facegroups;
+            if (hasfacegroups()) {
+                long _pos = this._io.pos();
+                this._io.seek((header().triangleoffset() - (28 * numfacegroups())));
+                this.facegroups = new ArrayList<ColFacegroup>();
+                for (int i = 0; i < numfacegroups(); i++) {
+                    this.facegroups.add(new ColFacegroup(this._io, this, _root));
+                }
+                this._io.seek(_pos);
+            }
+            return this.facegroups;
+        }
+        private Integer vertexendpos;
+        public Integer vertexendpos() {
+            if (this.vertexendpos != null)
+                return this.vertexendpos;
+            int _tmp = (int) ((hasfacegroups() ? (header().triangleoffset() - (28 * numfacegroups())) : (header().triangleoffset() + 4)));
+            this.vertexendpos = _tmp;
+            return this.vertexendpos;
+        }
+        private ArrayList<ColBox> boxes;
+        public ArrayList<ColBox> boxes() {
+            if (this.boxes != null)
+                return this.boxes;
+            if (header().boxoffset() > 0) {
+                long _pos = this._io.pos();
+                this._io.seek((header().boxoffset() + 4));
+                this.boxes = new ArrayList<ColBox>();
+                for (int i = 0; i < header().numboxes(); i++) {
+                    this.boxes.add(new ColBox(this._io, this, _root));
+                }
+                this._io.seek(_pos);
+            }
+            return this.boxes;
+        }
+        private Boolean hasshadowmesh;
+        public Boolean hasshadowmesh() {
+            if (this.hasshadowmesh != null)
+                return this.hasshadowmesh;
+            boolean _tmp = (boolean) ( ((((header().flags() & 16) + 0) != 0) && (header().numshadowmeshfaces() > 0)) );
+            this.hasshadowmesh = _tmp;
+            return this.hasshadowmesh;
+        }
+        private ArrayList<ColSphere> spheres;
+        public ArrayList<ColSphere> spheres() {
+            if (this.spheres != null)
+                return this.spheres;
+            if (header().sphereoffset() > 0) {
+                long _pos = this._io.pos();
+                this._io.seek((header().sphereoffset() + 4));
+                this.spheres = new ArrayList<ColSphere>();
+                for (int i = 0; i < header().numspheres(); i++) {
+                    this.spheres.add(new ColSphere(this._io, this, _root));
+                }
+                this._io.seek(_pos);
+            }
+            return this.spheres;
+        }
+        private Boolean usecones;
+        public Boolean usecones() {
+            if (this.usecones != null)
+                return this.usecones;
+            boolean _tmp = (boolean) (((header().flags() & 1) + 0) != 0);
+            this.usecones = _tmp;
+            return this.usecones;
+        }
+        private ArrayList<ColVertex> vertices;
+        public ArrayList<ColVertex> vertices() {
+            if (this.vertices != null)
+                return this.vertices;
+            long _pos = this._io.pos();
+            this._io.seek(header().vertexoffset());
+            this.vertices = new ArrayList<ColVertex>();
+            {
+                ColVertex _it;
+                int i = 0;
+                do {
+                    _it = new ColVertex(this._io, this, _root);
+                    this.vertices.add(_it);
+                    i++;
+                } while (!((_io().pos() + 6) >= vertexendpos()));
+            }
+            this._io.seek(_pos);
+            return this.vertices;
+        }
+        private Long numfacegroups;
+        public Long numfacegroups() {
+            if (this.numfacegroups != null)
+                return this.numfacegroups;
+            if (hasfacegroups()) {
+                long _pos = this._io.pos();
+                this._io.seek(header().triangleoffset());
+                this.numfacegroups = this._io.readU4le();
+                this._io.seek(_pos);
+            }
+            return this.numfacegroups;
+        }
+        private Boolean notempty;
+        public Boolean notempty() {
+            if (this.notempty != null)
+                return this.notempty;
+            boolean _tmp = (boolean) (((header().flags() & 2) + 0) != 0);
+            this.notempty = _tmp;
+            return this.notempty;
+        }
+        private ArrayList<ColVertex> shadowvertices;
+        public ArrayList<ColVertex> shadowvertices() {
+            if (this.shadowvertices != null)
+                return this.shadowvertices;
+            if (hasshadowmesh()) {
+                long _pos = this._io.pos();
+                this._io.seek((header().shadowvertexoffset() + 4));
+                this.shadowvertices = new ArrayList<ColVertex>();
+                {
+                    ColVertex _it;
+                    int i = 0;
+                    do {
+                        _it = new ColVertex(this._io, this, _root);
+                        this.shadowvertices.add(_it);
+                        i++;
+                    } while (!((_io().pos() + 6) >= header().shadowfaceoffset()));
+                }
+                this._io.seek(_pos);
+            }
+            return this.shadowvertices;
+        }
+        private ColHeader header;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.CollisionExtension _parent;
+        public ColHeader header() { return header; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.CollisionExtension _parent() { return _parent; }
+    }
     public static class UvLayer extends KaitaiStruct {
 
         public UvLayer(KaitaiStream _io, long numVertices) {
@@ -1450,6 +1949,108 @@ public class RenderwareBinaryStream extends KaitaiStruct {
         public long numVertices() { return numVertices; }
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.GeometryNonNative _parent() { return _parent; }
+    }
+    public static class ColVec3 extends KaitaiStruct {
+        public static ColVec3 fromFile(String fileName) throws IOException {
+            return new ColVec3(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColVec3(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColVec3(KaitaiStream _io, KaitaiStruct _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColVec3(KaitaiStream _io, KaitaiStruct _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.x = this._io.readF4le();
+            this.y = this._io.readF4le();
+            this.z = this._io.readF4le();
+        }
+        private float x;
+        private float y;
+        private float z;
+        private RenderwareBinaryStream _root;
+        private KaitaiStruct _parent;
+        public float x() { return x; }
+        public float y() { return y; }
+        public float z() { return z; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public KaitaiStruct _parent() { return _parent; }
+    }
+    public static class ColVertex extends KaitaiStruct {
+        public static ColVertex fromFile(String fileName) throws IOException {
+            return new ColVertex(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColVertex(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColVertex(KaitaiStream _io, RenderwareBinaryStream.Col _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColVertex(KaitaiStream _io, RenderwareBinaryStream.Col _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.vertex = new ArrayList<Short>();
+            for (int i = 0; i < 3; i++) {
+                this.vertex.add(this._io.readS2le());
+            }
+        }
+        private ArrayList<Short> vertex;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.Col _parent;
+        public ArrayList<Short> vertex() { return vertex; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.Col _parent() { return _parent; }
+    }
+    public static class ColBox extends KaitaiStruct {
+        public static ColBox fromFile(String fileName) throws IOException {
+            return new ColBox(new ByteBufferKaitaiStream(fileName));
+        }
+
+        public ColBox(KaitaiStream _io) {
+            this(_io, null, null);
+        }
+
+        public ColBox(KaitaiStream _io, RenderwareBinaryStream.Col _parent) {
+            this(_io, _parent, null);
+        }
+
+        public ColBox(KaitaiStream _io, RenderwareBinaryStream.Col _parent, RenderwareBinaryStream _root) {
+            super(_io);
+            this._parent = _parent;
+            this._root = _root;
+            _read();
+        }
+        private void _read() {
+            this.min = new ColVec3(this._io, this, _root);
+            this.max = new ColVec3(this._io, this, _root);
+            this.surface = new ColSurface(this._io, this, _root);
+        }
+        private ColVec3 min;
+        private ColVec3 max;
+        private ColSurface surface;
+        private RenderwareBinaryStream _root;
+        private RenderwareBinaryStream.Col _parent;
+        public ColVec3 min() { return min; }
+        public ColVec3 max() { return max; }
+        public ColSurface surface() { return surface; }
+        public RenderwareBinaryStream _root() { return _root; }
+        public RenderwareBinaryStream.Col _parent() { return _parent; }
     }
     public static class StructTextureDictionary extends KaitaiStruct {
         public static StructTextureDictionary fromFile(String fileName) throws IOException {
@@ -1613,6 +2214,10 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                         }
                         case FRAME: {
                             this.extension = new FrameExtension(this._io, this, _root);
+                            break;
+                        }
+                        case COLLISION_MODEL: {
+                            this.extension = new CollisionExtension(this._io, this, _root);
                             break;
                         }
                     }

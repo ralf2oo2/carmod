@@ -67,7 +67,7 @@ types:
       hasfacegroups:
         value: (header.flags & 8) + 0 != 0
       hasshadowmesh:
-        value: (header.flags & 16) + 0 != 0    
+        value: (header.flags & 16) + 0 != 0 and header.numshadowmeshfaces > 0
   col_header:
     seq:
       - id: ident

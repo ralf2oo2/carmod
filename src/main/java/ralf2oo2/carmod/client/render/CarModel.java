@@ -18,6 +18,7 @@ public class CarModel {
     private List<RenderwareBinaryStream> atomicList;
     private List<RenderwareBinaryStream> textureList;
     private RenderwareBinaryStream.ListWithHeader frameList;
+    private RenderwareBinaryStream.Col collision;
     private List<String> frameNames = new ArrayList<>();
     private List<String> modelBlacklist = new ArrayList<>();
 
@@ -70,6 +71,11 @@ public class CarModel {
         if(TxdTextureRegistry.textureCount() == 0){
             loadTextures();
         }
+
+        RenderwareBinaryStream.StructExtension colextension = (RenderwareBinaryStream.StructExtension) ((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().get(((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().size() - 1).body();
+        collision = ((RenderwareBinaryStream.CollisionExtension)colextension.extension()).collision();
+        ArrayList<RenderwareBinaryStream.ColSphere> spheres = collision.spheres();
+
         RenderwareBinaryStream.ListWithHeader geometryList = (RenderwareBinaryStream.ListWithHeader)((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().get(1).body();
 
         this.geometryList.clear();
