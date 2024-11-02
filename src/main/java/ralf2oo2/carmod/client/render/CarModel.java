@@ -44,10 +44,13 @@ public class CarModel {
             this.textureData = RenderwareBinaryStream.fromFile(path + name + ".txd");
         } catch (Exception e){
             System.out.println("Failed to load car model");
+            System.out.println(e.getLocalizedMessage());
         }
+
+
         loadData();
         for(int i = 0; i < frameNames.size(); i++){
-            if(frameNames.get(i).endsWith("dam") || frameNames.get(i).endsWith("dummy")){
+            if(frameNames.get(i).endsWith("dam") || frameNames.get(i).endsWith("dummy") || frameNames.get(i).endsWith("lo")){
                 modelBlacklist.add(frameNames.get(i));
             }
         }

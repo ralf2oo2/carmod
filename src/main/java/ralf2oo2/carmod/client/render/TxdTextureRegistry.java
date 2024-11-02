@@ -38,6 +38,7 @@ public class TxdTextureRegistry {
                 switch (textureFormat){
                     case "1TXD": format = 0x44585431; order = DDSReader.DXT1Order; break;
                     case "3TXD": format = 0x44585433; order = DDSReader.DXT3Order; break;
+                    default: System.out.println("Found unsupported version " + textureFormat);
                 }
                 int[] decodedTexture = DDSReader.read(textureData.data(), order, 0, textureData.width(), textureData.height(), format);
                 textureBuffer = ByteBuffer.allocateDirect(textureData.width() * textureData.height() * 4);
@@ -66,7 +67,7 @@ public class TxdTextureRegistry {
             System.out.println("Successfully added txd texture " + txdTexture.textureName);
         }
         catch (Exception e){
-            System.out.println(e);
+            System.out.println("Couldn't load texture");
         }
     }
 }
