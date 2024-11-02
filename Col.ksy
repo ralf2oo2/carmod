@@ -50,11 +50,16 @@ types:
         repeat: expr
         repeat-expr: header.numfaces
       shadowvertices:
-        pos: header.shadowvertexoffset
+        pos: header.shadowvertexoffset + 4
         type: col_vertex
         repeat: until
         repeat-until: _io.pos + 6 >= header.shadowfaceoffset
         if: hasshadowmesh
+      shadowfaces:
+        pos: header.shadowfaceoffset + 4
+        type: col_face
+        repeat: expr
+        repeat-expr: header.numshadowmeshfaces
       usecones:
         value: (header.flags & 1) + 0 != 0
       notempty:
