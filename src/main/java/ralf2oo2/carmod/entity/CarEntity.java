@@ -3,6 +3,7 @@ package ralf2oo2.carmod.entity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -18,6 +19,12 @@ public class CarEntity extends Entity {
     @Override
     protected void initDataTracker() {
 
+    }
+
+    @Override
+    public Box getCollisionAgainstShape(Entity other) {
+        System.out.println("collision shape");
+        return super.getCollisionAgainstShape(other);
     }
 
     @Override
