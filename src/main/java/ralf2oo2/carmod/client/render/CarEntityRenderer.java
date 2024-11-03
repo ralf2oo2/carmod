@@ -20,10 +20,14 @@ public class CarEntityRenderer extends EntityRenderer {
     public void render(Entity entity, double x, double y, double z, float g, float h) {
         CarEntity carEntity = (CarEntity)entity;
         Optional<Vehicle> vehicle = VehicleRegistry.getVehicle(carEntity.carName);
-        //System.out.println(((Minecraft)FabricLoader.getInstance().getGameInstance()).world.method_198(h));
         if(vehicle.isPresent()){
-            vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            if(!DebugRenderer.active){
+                vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            }
+            else {
+                DebugRenderer.renderCollisionSpheres((float)x, (float)y, (float)z, vehicle.get().vehicleCollisions.collisions.spheres());
+            }
         }
-        //System.out.println(carEntity.method_1394(h));
+
     }
 }
