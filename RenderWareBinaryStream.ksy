@@ -448,10 +448,10 @@ types:
         repeat-expr: numfacegroups
         if: hasfacegroups
       vertices:
-        pos: header.vertexoffset
+        pos: header.vertexoffset + 4
         type: col_vertex
         repeat: until
-        repeat-until: _io.pos + 6 >= vertexendpos
+        repeat-until: _io.pos + 6 > vertexendpos
       vertexendpos:
         value: 'hasfacegroups ? header.triangleoffset - (28 * numfacegroups) : header.triangleoffset + 4'
       faces:
@@ -463,7 +463,7 @@ types:
         pos: header.shadowvertexoffset + 4
         type: col_vertex
         repeat: until
-        repeat-until: _io.pos + 6 >= header.shadowfaceoffset
+        repeat-until: _io.pos + 6 > header.shadowfaceoffset + 4
         if: hasshadowmesh
       shadowfaces:
         pos: header.shadowfaceoffset + 4

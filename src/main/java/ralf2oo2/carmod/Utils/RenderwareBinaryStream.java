@@ -1864,7 +1864,7 @@ public class RenderwareBinaryStream extends KaitaiStruct {
             if (this.vertices != null)
                 return this.vertices;
             long _pos = this._io.pos();
-            this._io.seek(header().vertexoffset());
+            this._io.seek((header().vertexoffset() + 4));
             this.vertices = new ArrayList<ColVertex>();
             {
                 ColVertex _it;
@@ -1873,7 +1873,7 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                     _it = new ColVertex(this._io, this, _root);
                     this.vertices.add(_it);
                     i++;
-                } while (!((_io().pos() + 6) >= vertexendpos()));
+                } while (!((_io().pos() + 6) > vertexendpos()));
             }
             this._io.seek(_pos);
             return this.vertices;
@@ -1913,7 +1913,7 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                         _it = new ColVertex(this._io, this, _root);
                         this.shadowvertices.add(_it);
                         i++;
-                    } while (!((_io().pos() + 6) >= header().shadowfaceoffset()));
+                    } while (!((_io().pos() + 6) > (header().shadowfaceoffset() + 4)));
                 }
                 this._io.seek(_pos);
             }
@@ -2268,3 +2268,5 @@ public class RenderwareBinaryStream extends KaitaiStruct {
     public KaitaiStruct _parent() { return _parent; }
     public byte[] _raw_body() { return _raw_body; }
 }
+
+

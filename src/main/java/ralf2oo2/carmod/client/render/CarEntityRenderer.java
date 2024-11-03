@@ -4,10 +4,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
+import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 import ralf2oo2.carmod.entity.CarEntity;
 import ralf2oo2.carmod.registry.VehicleRegistry;
 import ralf2oo2.carmod.vehicle.Vehicle;
-import ralf2oo2.carmod.vehicle.VehicleModel;
 
 import java.util.Optional;
 
@@ -25,7 +25,11 @@ public class CarEntityRenderer extends EntityRenderer {
                 vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
             }
             else {
-                DebugRenderer.renderCollisionSpheres((float)x, (float)y, (float)z, vehicle.get().vehicleCollisions.collisions.spheres());
+                RenderwareBinaryStream.Col collisions = vehicle.get().vehicleCollisions.collisions;
+                DebugRenderer.renderCollisionSpheres((float)x, (float)y, (float)z, collisions.spheres());
+                DebugRenderer.renderFaces((float)x, (float)y, (float)z, collisions.faces(), collisions.vertices());
+                DebugRenderer.renderFaces((float)x, (float)y, (float)z, collisions.shadowfaces(), collisions.shadowvertices());
+                DebugRenderer.renderBounds((float)x, (float)y, (float)z, collisions.header().bounds());
             }
         }
 
