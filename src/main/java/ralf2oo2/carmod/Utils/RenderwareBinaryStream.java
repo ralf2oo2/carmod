@@ -1348,14 +1348,22 @@ public class RenderwareBinaryStream extends KaitaiStruct {
             _read();
         }
         private void _read() {
-            this.collision = new Col(this._io, this, _root);
         }
-        private Col collision;
+        private Col col;
+        public Col col() {
+            if (this.col != null)
+                return this.col;
+            this._raw_col = this._io.readBytes((_parent().size() - 4));
+            KaitaiStream _io__raw_col = new ByteBufferKaitaiStream(_raw_col);
+            this.col = new Col(_io__raw_col, this, _root);
+            return this.col;
+        }
         private RenderwareBinaryStream _root;
         private RenderwareBinaryStream.StructExtension _parent;
-        public Col collision() { return collision; }
+        private byte[] _raw_col;
         public RenderwareBinaryStream _root() { return _root; }
         public RenderwareBinaryStream.StructExtension _parent() { return _parent; }
+        public byte[] _raw_col() { return _raw_col; }
     }
 
     /**
@@ -1834,7 +1842,7 @@ public class RenderwareBinaryStream extends KaitaiStruct {
                 return this.spheres;
             if (header().sphereoffset() > 0) {
                 long _pos = this._io.pos();
-                this._io.seek((header().sphereoffset() + 4));
+                this._io.seek(0);
                 this.spheres = new ArrayList<ColSphere>();
                 for (int i = 0; i < header().numspheres(); i++) {
                     this.spheres.add(new ColSphere(this._io, this, _root));
@@ -1856,7 +1864,7 @@ public class RenderwareBinaryStream extends KaitaiStruct {
             if (this.vertices != null)
                 return this.vertices;
             long _pos = this._io.pos();
-            this._io.seek(header().vertexoffset());
+            this._io.seek(0);
             this.vertices = new ArrayList<ColVertex>();
             {
                 ColVertex _it;

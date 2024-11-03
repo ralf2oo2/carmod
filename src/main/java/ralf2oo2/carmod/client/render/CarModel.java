@@ -73,7 +73,7 @@ public class CarModel {
         }
 
         RenderwareBinaryStream.StructExtension colextension = (RenderwareBinaryStream.StructExtension) ((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().get(((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().size() - 1).body();
-        collision = ((RenderwareBinaryStream.CollisionExtension)colextension.extension()).collision();
+        collision = ((RenderwareBinaryStream.CollisionExtension)colextension.extension()).col();
         ArrayList<RenderwareBinaryStream.ColSphere> spheres = collision.spheres();
 
         RenderwareBinaryStream.ListWithHeader geometryList = (RenderwareBinaryStream.ListWithHeader)((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().get(1).body();

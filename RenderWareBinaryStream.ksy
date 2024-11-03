@@ -114,8 +114,9 @@ types:
         encoding: UTF-8
         size: _parent.size
   collision_extension:
-    seq:
-      - id: collision
+    instances:
+      col:
+        size: _parent.size
         type: col
   rp_mesh:
     seq:
@@ -423,8 +424,6 @@ types:
     seq:
       - id: header
         type: col_header
-      - id: padding
-        size: header.size - 112
     instances:
       spheres:
         pos: header.sphereoffset + 4
@@ -461,11 +460,16 @@ types:
         repeat: expr
         repeat-expr: header.numfaces
       shadowvertices:
-        pos: header.shadowvertexoffset
+        pos: header.shadowvertexoffset + 4
         type: col_vertex
         repeat: until
         repeat-until: _io.pos + 6 >= header.shadowfaceoffset
         if: hasshadowmesh
+      shadowfaces:
+        pos: header.shadowfaceoffset + 4
+        type: col_face
+        repeat: expr
+        repeat-expr: header.numshadowmeshfaces
       usecones:
         value: (header.flags & 1) + 0 != 0
       notempty:
@@ -473,7 +477,7 @@ types:
       hasfacegroups:
         value: (header.flags & 8) + 0 != 0
       hasshadowmesh:
-        value: (header.flags & 16) + 0 != 0    
+        value: (header.flags & 16) + 0 != 0 and header.numshadowmeshfaces > 0
   col_header:
     seq:
       - id: ident
@@ -591,7 +595,7 @@ types:
       - id: material
         type: u1
       - id: light
-        type: u1      
+        type: u1   
 enums:
   sections:
     0x0001: struct
