@@ -87,6 +87,9 @@ dependencies {
 	modImplementation("net.glasslauncher:HowManyItems-Fabric-Unofficial:${project.howmanyitems_version}") {
 		transitive false
 	}
+	modImplementation('com.github.matthewperiut:retrocommands:0.5.4') {
+		transitive false
+	}
 }
 
 processResources {
