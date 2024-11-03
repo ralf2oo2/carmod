@@ -12,6 +12,10 @@ import java.util.ArrayList;
 
 public class DebugRenderer {
     public static boolean active = false;
+    public static boolean renderSpheres = true;
+    public static boolean renderMesh = true;
+    public static boolean renderBounds = true;
+    public static boolean renderShadowMesh = false;
 
     public static void renderCollisionSpheres(float x, float y, float z, ArrayList<RenderwareBinaryStream.ColSphere> spheres){
         GL11.glPushMatrix();

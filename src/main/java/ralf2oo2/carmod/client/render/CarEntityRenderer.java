@@ -26,10 +26,18 @@ public class CarEntityRenderer extends EntityRenderer {
             }
             else {
                 RenderwareBinaryStream.Col collisions = vehicle.get().vehicleCollisions.collisions;
-                DebugRenderer.renderCollisionSpheres((float)x, (float)y, (float)z, collisions.spheres());
-                DebugRenderer.renderFaces((float)x, (float)y, (float)z, collisions.faces(), collisions.vertices());
-                DebugRenderer.renderFaces((float)x, (float)y, (float)z, collisions.shadowfaces(), collisions.shadowvertices());
-                DebugRenderer.renderBounds((float)x, (float)y, (float)z, collisions.header().bounds());
+                if(DebugRenderer.renderSpheres){
+                    DebugRenderer.renderCollisionSpheres((float)x, (float)y, (float)z, collisions.spheres());
+                }
+                if(DebugRenderer.renderMesh){
+                    DebugRenderer.renderFaces((float)x, (float)y, (float)z, collisions.faces(), collisions.vertices());
+                }
+                if(DebugRenderer.renderShadowMesh){
+                    DebugRenderer.renderFaces((float)x, (float)y, (float)z, collisions.shadowfaces(), collisions.shadowvertices());
+                }
+                if(DebugRenderer.renderBounds){
+                    DebugRenderer.renderBounds((float)x, (float)y, (float)z, collisions.header().bounds());
+                }
             }
         }
 
