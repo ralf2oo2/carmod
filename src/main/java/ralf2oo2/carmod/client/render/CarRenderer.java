@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.registry.VehicleTextureRegistry;
 
 import java.nio.FloatBuffer;
 import java.nio.charset.StandardCharsets;
@@ -42,12 +43,12 @@ public class CarRenderer {
         GL11.glTranslatef(frame.position().x(), frame.position().z(), -frame.position().y());
     }
 
-    private void loadTextures(){
-        for(int i = 0; i < textureList.size(); i++){
-            RenderwareBinaryStream.StructTextureData textureData = getStructTextureData(textureList.get(i));
-            TxdTextureRegistry.registerTexture(textureData);
-        }
-    }
+//    private void loadTextures(){
+//        for(int i = 0; i < textureList.size(); i++){
+//            RenderwareBinaryStream.StructTextureData textureData = getStructTextureData(textureList.get(i));
+//            VehicleTextureRegistry.registerTexture(textureData);
+//        }
+//    }
 
     private List<Material> getMaterialListForGeometry(int geometryIndex){
         List<Material> materials = new ArrayList<>();
@@ -272,7 +273,7 @@ public class CarRenderer {
 
                 int textureUnit = 0;
                 if(materials.get(index).hasTexture){
-                    int textureId = TxdTextureRegistry.getTextureId(materials.get(index).texture.name.replace("\0", ""));
+                    int textureId = VehicleTextureRegistry.getTextureId(materials.get(index).texture.name.replace("\0", ""));
                     //((Minecraft)FabricLoader.getInstance().getGameInstance()).textureManager.getTextureId("/gui/furnace.png");
                     GL13.glActiveTexture(GL13.GL_TEXTURE0);
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
@@ -346,8 +347,8 @@ public class CarRenderer {
                         textureList.add(entry);
                     }
                 });
-                if(TxdTextureRegistry.textureCount() == 0){
-                    loadTextures();
+                if(VehicleTextureRegistry.textureCount() == 0){
+                    //loadTextures();
                 }
                 this.geometryList = (RenderwareBinaryStream.ListWithHeader)((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().get(1).body();
                 this.frameList = (RenderwareBinaryStream.ListWithHeader)((RenderwareBinaryStream.ListWithHeader) geometryData.body()).entries().get(0).body();

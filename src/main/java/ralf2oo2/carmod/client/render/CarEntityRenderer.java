@@ -5,6 +5,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
 import ralf2oo2.carmod.entity.CarEntity;
+import ralf2oo2.carmod.registry.VehicleRegistry;
+import ralf2oo2.carmod.vehicle.Vehicle;
+import ralf2oo2.carmod.vehicle.VehicleModel;
+
+import java.util.Optional;
 
 public class CarEntityRenderer extends EntityRenderer {
     private CarRenderer carRenderer;
@@ -14,10 +19,10 @@ public class CarEntityRenderer extends EntityRenderer {
     @Override
     public void render(Entity entity, double x, double y, double z, float g, float h) {
         CarEntity carEntity = (CarEntity)entity;
-        CarModel carModel = CarModel.getCarModel(carEntity.carName);
+        Optional<Vehicle> vehicle = VehicleRegistry.getVehicle(carEntity.carName);
         //System.out.println(((Minecraft)FabricLoader.getInstance().getGameInstance()).world.method_198(h));
-        if(carModel != null){
-            carModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+        if(vehicle.isPresent()){
+            vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
         }
         //System.out.println(carEntity.method_1394(h));
     }

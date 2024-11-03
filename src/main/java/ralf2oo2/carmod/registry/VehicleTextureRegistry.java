@@ -1,22 +1,54 @@
-package ralf2oo2.carmod.client.render;
+package ralf2oo2.carmod.registry;
 
+import net.fabricmc.loader.api.FabricLoader;
+import net.mine_diver.unsafeevents.listener.EventListener;
+import net.modificationstation.stationapi.api.client.event.texture.TextureRegisterEvent;
 import org.lwjgl.opengl.GL11;
+import ralf2oo2.carmod.Utils.BinaryStreamHelpers;
 import ralf2oo2.carmod.Utils.DDSReader;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.client.render.TxdTexture;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TxdTextureRegistry {
+public class VehicleTextureRegistry {
     private static List<TxdTexture> txdTextures = new ArrayList<>();
+    @EventListener
+    public void registerVehicleTextures(TextureRegisterEvent event){
+        String path = FabricLoader.getInstance().getConfigDir() + "/";
+        loadTextureDictionary(path + "test.txd");
+    }
     public static int textureCount(){
         return txdTextures.size();
     }
+    public void loadTextureDictionary(String path){
 
-    public static List<TxdTexture> getTxdTextures(){
+        try {
+            RenderwareBinaryStream binaryStream = RenderwareBinaryStream.fromFile(path);
+            List textureList = new ArrayList<>();
+            ((RenderwareBinaryStream.ListWithHeader) binaryStream.body()).entries().forEach((entry) -> {
+                if(entry.code().name() == "TEXTURE_NATIVE"){
+                    textureList.add(entry);
+                }
+            });
+            // TODO: dont allow duplicate texture names
+            if(textureCount() == 0){
+                for(int i = 0; i < textureList.size(); i++){
+                    RenderwareBinaryStream.StructTextureData textureData = BinaryStreamHelpers.getStructTextureData((RenderwareBinaryStream) textureList.get(i));
+                    VehicleTextureRegistry.registerTexture(textureData);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Couldnt load TextureDictionary at " + path);
+        }
+    }
+
+    public static List<TxdTexture> getVehicleTextures(){
         return txdTextures;
     }
 
@@ -27,8 +59,8 @@ public class TxdTextureRegistry {
         }
         return -1;
     }
-
-    public static void registerTexture(RenderwareBinaryStream.StructTextureData textureData){
+    
+    private static void registerTexture(RenderwareBinaryStream.StructTextureData textureData){
         try{
             ByteBuffer textureBuffer;
             if(textureData.direct3dTextureFormat() != 0){

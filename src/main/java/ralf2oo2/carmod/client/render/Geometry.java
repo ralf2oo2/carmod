@@ -3,13 +3,12 @@ package ralf2oo2.carmod.client.render;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.*;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.registry.VehicleTextureRegistry;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Geometry {
     private static final String vertexShaderSource =
@@ -329,7 +328,7 @@ public class Geometry {
             }
 
             if(material.hasTexture){
-                int textureId = TxdTextureRegistry.getTextureId(material.texture.name.replace("\0", ""));
+                int textureId = VehicleTextureRegistry.getTextureId(material.texture.name.replace("\0", ""));
                 //((Minecraft)FabricLoader.getInstance().getGameInstance()).textureManager.getTextureId("/gui/furnace.png");
                 GL13.glActiveTexture(GL13.GL_TEXTURE0);
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureId);
