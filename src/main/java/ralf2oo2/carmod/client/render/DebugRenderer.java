@@ -19,8 +19,6 @@ public class DebugRenderer {
 
     public static void renderCollisionSpheres(float x, float y, float z, ArrayList<RenderwareBinaryStream.ColSphere> spheres){
         GL11.glPushMatrix();
-        GL11.glTranslatef(x, y, z);
-        GL11.glTranslatef(0f, 1f, 0f);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         for(int i = 0; i < spheres.size(); i++){
             RenderwareBinaryStream.ColSphere collisionSphere = spheres.get(i);
@@ -33,10 +31,16 @@ public class DebugRenderer {
         }
         GL11.glPopMatrix();
     }
+
+    public static void renderSphere(float radius){
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        Sphere sphere = new Sphere();
+        sphere.setDrawStyle(GLU.GLU_LINE);
+        sphere.draw(radius, 16, 16);
+    }
+
     public static void renderFaces(float x, float y, float z, ArrayList<RenderwareBinaryStream.ColFace> faces, ArrayList<RenderwareBinaryStream.ColVertex> vertices){
         GL11.glPushMatrix();
-        GL11.glTranslatef(x, y, z);
-        GL11.glTranslatef(0f, 1f, 0f);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(vertices.size() * 3);
         for (RenderwareBinaryStream.ColVertex vertex : vertices) {
@@ -71,8 +75,6 @@ public class DebugRenderer {
     public static void renderBounds(float x, float y, float z, RenderwareBinaryStream.ColBounds bounds){
         GL11.glPushMatrix();
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-        GL11.glTranslatef(x, y, z);
-        GL11.glTranslatef(0f, 1f, 0f);
         RenderwareBinaryStream.ColVec3 min = bounds.min();
         RenderwareBinaryStream.ColVec3 max = bounds.max();
         RenderwareBinaryStream.ColVec3 center = bounds.center();

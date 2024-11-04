@@ -9,6 +9,9 @@ import net.minecraft.world.World;
 import ralf2oo2.carmod.Carmod;
 
 public class CarEntity extends Entity {
+    public float vehiclePitch;
+    public float vehicleYaw;
+    public float vehicleRoll;
     public String carName;
     public CarEntity(World world) {
         super(world);
@@ -29,6 +32,14 @@ public class CarEntity extends Entity {
     public Box getCollisionAgainstShape(Entity other) {
         System.out.println("collision shape");
         return super.getCollisionAgainstShape(other);
+    }
+
+
+    public void setRotation(float pitch, float yaw, float roll) {
+        super.setRotation(yaw, pitch);
+        this.vehiclePitch = pitch;
+        this.vehicleYaw = yaw;
+        this.vehicleRoll = roll;
     }
 
     @Override

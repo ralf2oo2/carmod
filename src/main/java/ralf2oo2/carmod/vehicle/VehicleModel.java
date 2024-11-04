@@ -51,8 +51,6 @@ public class VehicleModel {
 
     public void render(double x, double y, double z, float brightness, PlayerEntity player){
         GL11.glPushMatrix();
-        GL11.glTranslatef((float)x, (float)y, (float)z);
-        GL11.glTranslatef(0, (float)1, 0);
         for(int i = 0; i < atomicList.size(); i++){
             RenderwareBinaryStream.StructAtomic structAtomic = BinaryStreamHelpers.getStructAtomic(atomicList.get(i));
             if(modelBlacklist.contains(frameNames.get((int)structAtomic.frameIndex()))){
