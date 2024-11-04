@@ -27,18 +27,18 @@ public class KeyPressedListener {
             DebugRenderer.active = !DebugRenderer.active;
             System.out.println("Activated debug renderer");
         }
-        if(event.environment == KeyStateChangedEvent.Environment.IN_GAME && Keyboard.getEventKey() == Keyboard.KEY_P){
-            Iterator<DGeom> iterator = Carmod.space.getGeoms().iterator(); // Replace GeometryType with the actual type
-
-            while (iterator.hasNext()) {
-                DGeom geom = iterator.next();
-                PlayerEntity player = CarmodClient.getMc().player;
-                geom.setPosition(player.x, player.y + 20, player.z);
-                System.out.println(geom); // Or whatever processing you need
-            }
-        }
-        if(event.environment == KeyStateChangedEvent.Environment.IN_GAME && Keyboard.getEventKey() == Keyboard.KEY_O){
-            Carmod.world.quickStep(1d);
-        }
+//        if(event.environment == KeyStateChangedEvent.Environment.IN_GAME && Keyboard.getEventKey() == Keyboard.KEY_P){
+//            Iterator<DGeom> iterator = Carmod.space.getGeoms().iterator(); // Replace GeometryType with the actual type
+//
+//            while (iterator.hasNext()) {
+//                DGeom geom = iterator.next();
+//                PlayerEntity player = CarmodClient.getMc().player;
+//                geom.setPosition(player.x, player.y + 20, player.z);
+//                System.out.println(geom); // Or whatever processing you need
+//            }
+//        }
+//        if(event.environment == KeyStateChangedEvent.Environment.IN_GAME && Keyboard.getEventKey() == Keyboard.KEY_O){
+//            Carmod.world.quickStep(1d);
+//        }
     }
 }

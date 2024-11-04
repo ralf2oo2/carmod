@@ -6,6 +6,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import ralf2oo2.carmod.Carmod;
 
 public class CarEntity extends Entity {
     public String carName;
@@ -18,7 +19,10 @@ public class CarEntity extends Entity {
 
     @Override
     protected void initDataTracker() {
-
+        System.out.println("Init datatracker");
+        Carmod.physicsEngine.executionQueue.add(() -> {
+            Carmod.physicsEngine.registerEntity(this);
+        });
     }
 
     @Override
@@ -45,7 +49,6 @@ public class CarEntity extends Entity {
 
     @Override
     protected void readNbt(NbtCompound nbt) {
-
     }
 
     @Override

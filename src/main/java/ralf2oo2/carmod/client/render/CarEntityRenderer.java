@@ -46,23 +46,23 @@ public class CarEntityRenderer extends EntityRenderer {
                     DebugRenderer.renderBounds((float)x, (float)y, (float)z, collisions.header().bounds());
                 }
             }
-            Iterator<DGeom> iterator = Carmod.space.getGeoms().iterator(); // Replace GeometryType with the actual type
-
-            while (iterator.hasNext()) {
-                DGeom geom = iterator.next();
-                GL11.glPushMatrix();
-                DVector3 vector = (DVector3) geom.getPosition();
-                float relativePosX = (float)(vector.get0() - CarmodClient.getMc().player.x);
-                float relativePosY = (float)(vector.get1() - CarmodClient.getMc().player.y);
-                float relativePosZ = (float)(vector.get2() - CarmodClient.getMc().player.z);
-                GL11.glTranslatef(relativePosX, relativePosY, relativePosZ);
-
-                vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
-
-                GL11.glPopMatrix();
-                // Process each geometry
-                System.out.println(geom); // Or whatever processing you need
-            }
+//            Iterator<DGeom> iterator = Carmod.space.getGeoms().iterator(); // Replace GeometryType with the actual type
+//
+//            while (iterator.hasNext()) {
+//                DGeom geom = iterator.next();
+//                GL11.glPushMatrix();
+//                DVector3 vector = (DVector3) geom.getPosition();
+//                float relativePosX = (float)(vector.get0() - CarmodClient.getMc().player.x);
+//                float relativePosY = (float)(vector.get1() - CarmodClient.getMc().player.y);
+//                float relativePosZ = (float)(vector.get2() - CarmodClient.getMc().player.z);
+//                GL11.glTranslatef(relativePosX, relativePosY, relativePosZ);
+//
+//                vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+//
+//                GL11.glPopMatrix();
+//                // Process each geometry
+//                System.out.println(geom); // Or whatever processing you need
+//            }
         }
     }
 }
