@@ -54,6 +54,7 @@ public class VehicleCollisions {
 
         meshData.build(vertexArray, indexArray);
         meshData.preprocess();
+        this.meshCollider = meshData;
     }
 
     public void InstanceiateCollisions(DWorld world){

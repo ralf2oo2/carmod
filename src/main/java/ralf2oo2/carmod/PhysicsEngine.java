@@ -24,7 +24,7 @@ import static org.ode4j.ode.internal.DxGeom.dCollide;
 
 public class PhysicsEngine implements Runnable{
     private static final Logger logger = LogManager.getLogger(PhysicsEngine.class);
-    private static final int MAX_CONTACTS = 8;
+    private static final int MAX_CONTACTS = 10;
     private final DWorld world;
     private final DSpace space;
     private final DJointGroup contactGroup;
@@ -39,7 +39,7 @@ public class PhysicsEngine implements Runnable{
         contactGroup = OdeHelper.createJointGroup();
         space = OdeHelper.createSimpleSpace();
         world.setContactSurfaceLayer (0.001);
-        OdeHelper.createPlane(space, 0, 1, 0, 65);
+        OdeHelper.createPlane(space, 0, 1, 0, 64);
     }
 
     public Optional<DBody> getEntityBody(CarEntity entity){
@@ -81,10 +81,10 @@ public class PhysicsEngine implements Runnable{
         try{
             handleCollisions();
             world.quickStep(1d / 60);
+            contactGroup.empty();
             pollQueue();
             updateEntities();
             removeDeadEntities();
-            contactGroup.empty();
         }
         catch (Exception e){
             logger.error("Exception in physics thread: {}", e.getMessage(), e);
@@ -125,33 +125,24 @@ public class PhysicsEngine implements Runnable{
     private final DGeom.DNearCallback nearCallback = this::nearCallback;
     private void nearCallback (Object data, DGeom o1, DGeom o2)
     {
-        int i;
-        // if (o1->body && o2->body) return;
-
-        // exit without doing anything if the two bodies are connected by a joint
-        DBody b1 = o1.getBody();
-        DBody b2 = o2.getBody();
-        if (b1!=null && b2!=null && OdeHelper.areConnectedExcluding (b1,b2,DContactJoint.class)) {
-            return;
-        }
-
-        //dContact[] contact=new dContact[MAX_CONTACTS];   // up to MAX_CONTACTS contacts per box-box
-        DContactBuffer contacts = new DContactBuffer(MAX_CONTACTS);
-        for (DContact contact: contacts) {
-            contact.surface.mode = dContactBounce | dContactSoftCFM;
-            contact.surface.soft_cfm = 1e-4;
-            contact.surface.mu = 0.8d;
-        }
-        //	if (int numc = dCollide (o1,o2,MAX_CONTACTS,&contact[0].geom,
-        //			sizeof(dContact))) {
-        int numc = OdeHelper.collide (o1,o2,MAX_CONTACTS,contacts.getGeomBuffer());//, sizeof(dContact));
-        if (numc!=0) {
-            DMatrix3 RI = new DMatrix3();
-            RI.setIdentity();
-            final DVector3 ss = new DVector3(0.02,0.02,0.02);
-            for (i=0; i<numc; i++) {
-                DJoint c = OdeHelper.createContactJoint (world,contactGroup,contacts.get(i));
-                c.attach (b1,b2);
+        int i,n;
+        final int N = 10;
+        DContactBuffer contacts = new DContactBuffer(N);
+        n = OdeHelper.collide (o1,o2,N,contacts.getGeomBuffer());
+        if (n > 0) {
+            for (i=0; i<n; i++) {
+                DContact contact = contacts.get(i);
+                contact.surface.mode = OdeConstants.dContactSlip1 | OdeConstants.dContactSlip2 |
+                        OdeConstants.dContactSoftERP | OdeConstants.dContactSoftCFM | OdeConstants.dContactApprox1;
+                contact.surface.mu = OdeConstants.dInfinity;
+                contact.surface.slip1 = 0.001;
+                contact.surface.slip2 = 0.001;
+                contact.surface.soft_erp = 0.1;
+                contact.surface.soft_cfm = 0;
+                DJoint c = OdeHelper.createContactJoint (world,contactGroup,contact);
+                c.attach(
+                        contact.geom.g1.getBody(),
+                        contact.geom.g2.getBody());
             }
         }
     }
