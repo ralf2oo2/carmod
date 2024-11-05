@@ -2,6 +2,8 @@ package ralf2oo2.carmod;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.modificationstation.stationapi.api.tick.TickScheduler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 import org.ode4j.math.DMatrix3;
 import org.ode4j.math.DMatrix3C;
@@ -21,6 +23,7 @@ import static org.ode4j.ode.OdeConstants.*;
 import static org.ode4j.ode.internal.DxGeom.dCollide;
 
 public class PhysicsEngine implements Runnable{
+    private static final Logger logger = LogManager.getLogger(PhysicsEngine.class);
     private static final int MAX_CONTACTS = 8;
     private final DWorld world;
     private final DSpace space;
@@ -58,6 +61,8 @@ public class PhysicsEngine implements Runnable{
             geom.setBody(body);
             geom.setOffsetPosition(sphere.center().x(), sphere.center().z(), sphere.center().y());
         }
+        DGeom meshGeom = OdeHelper.createTriMesh(space, vehicle.get().vehicleCollisions.meshCollider);
+        meshGeom.setBody(body);
         DMass mass = OdeHelper.createMass();
         RenderwareBinaryStream.ColBounds bounds = collisions.header().bounds();
         mass.setBoxTotal(1500d, bounds.max().z() - bounds.min().z(), bounds.max().x() - bounds.min().x(), bounds.max().y() - bounds.min().y());
@@ -70,14 +75,20 @@ public class PhysicsEngine implements Runnable{
         while ((command = executionQueue.poll()) != null) command.run();
     }
 
+    // TODO: shutdown thread when error occurs
     @Override
     public void run() {
-        handleCollisions();
-        world.quickStep(1d / 60);
-        pollQueue();
-        updateEntities();
-        removeDeadEntities();
-        contactGroup.empty();
+        try{
+            handleCollisions();
+            world.quickStep(1d / 60);
+            pollQueue();
+            updateEntities();
+            removeDeadEntities();
+            contactGroup.empty();
+        }
+        catch (Exception e){
+            logger.error("Exception in physics thread: {}", e.getMessage(), e);
+        }
     }
 
     private void handleCollisions(){
