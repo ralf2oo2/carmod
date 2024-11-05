@@ -7,6 +7,7 @@ import net.minecraft.entity.Entity;
 import org.checkerframework.checker.units.qual.C;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
 import org.ode4j.math.DVector3;
 import org.ode4j.ode.DBody;
 import org.ode4j.ode.DGeom;
@@ -48,6 +49,7 @@ public class CarEntityRenderer extends EntityRenderer {
 
             if(!DebugRenderer.active){
                 vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+                renderWheels(vehicle.get(), carEntity, h);
             }
             else {
                 RenderwareBinaryStream.Col collisions = vehicle.get().vehicleCollisions.collisions;
@@ -91,5 +93,46 @@ public class CarEntityRenderer extends EntityRenderer {
                 }
             }
         }
+    }
+
+    private void renderWheels(Vehicle vehicle, CarEntity carEntity, float delta){
+
+        GL11.glPushMatrix();
+        GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+        Optional<RenderwareBinaryStream.Frame> frame = vehicle.vehicleModel.getFrameByName("wheel_lf_dummy");
+        if(frame.isPresent()){
+            Vector3f vector3f = vehicle.vehicleModel.getFrameOffset(frame.get());
+            GL11.glPushMatrix();
+            GL11.glTranslatef(vector3f.x, vector3f.y, vector3f.z);
+            GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+            vehicle.vehicleModel.renderWheel(carEntity.getBrightnessAtEyes(delta), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            GL11.glPopMatrix();
+        }
+        frame = vehicle.vehicleModel.getFrameByName("wheel_rf_dummy");
+        if(frame.isPresent()){
+            Vector3f vector3f = vehicle.vehicleModel.getFrameOffset(frame.get());
+            GL11.glPushMatrix();
+            GL11.glTranslatef(vector3f.x, vector3f.y, vector3f.z);
+            vehicle.vehicleModel.renderWheel(carEntity.getBrightnessAtEyes(delta), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            GL11.glPopMatrix();
+        }
+        frame = vehicle.vehicleModel.getFrameByName("wheel_lb_dummy");
+        if(frame.isPresent()){
+            Vector3f vector3f = vehicle.vehicleModel.getFrameOffset(frame.get());
+            GL11.glPushMatrix();
+            GL11.glTranslatef(vector3f.x, vector3f.y, vector3f.z);
+            GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+            vehicle.vehicleModel.renderWheel(carEntity.getBrightnessAtEyes(delta), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            GL11.glPopMatrix();
+        }
+        frame = vehicle.vehicleModel.getFrameByName("wheel_rb_dummy");
+        if(frame.isPresent()){
+            Vector3f vector3f = vehicle.vehicleModel.getFrameOffset(frame.get());
+            GL11.glPushMatrix();
+            GL11.glTranslatef(vector3f.x, vector3f.y, vector3f.z);
+            vehicle.vehicleModel.renderWheel(carEntity.getBrightnessAtEyes(delta), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            GL11.glPopMatrix();
+        }
+        GL11.glPopMatrix();
     }
 }

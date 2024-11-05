@@ -3,6 +3,7 @@ package ralf2oo2.carmod.vehicle;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Vector3f;
 import ralf2oo2.carmod.Utils.BinaryStreamHelpers;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 import ralf2oo2.carmod.client.render.Geometry;
@@ -10,6 +11,7 @@ import ralf2oo2.carmod.registry.VehicleTextureRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class VehicleModel {
     private RenderwareBinaryStream binaryStream;
@@ -27,6 +29,7 @@ public class VehicleModel {
                 modelBlacklist.add(frameNames.get(i));
             }
         }
+        modelBlacklist.add("wheel");
     }
 
     public void loadData(){
@@ -49,6 +52,25 @@ public class VehicleModel {
         }
     }
 
+    public Optional<Geometry> getFrameGeometry(RenderwareBinaryStream.Frame frame){
+        int frameIndex = BinaryStreamHelpers.getStructFrameList(frameList).frames().indexOf(frame);
+        for(int i = 0; i < atomicList.size(); i++) {
+            RenderwareBinaryStream.StructAtomic structAtomic = BinaryStreamHelpers.getStructAtomic(atomicList.get(i));
+            if(structAtomic.frameIndex() == frameIndex){
+                return Optional.ofNullable(geometryList.get((int)structAtomic.geometryIndex()));
+            }
+        }
+        return Optional.empty();
+    }
+
+    public void renderWheel(float brightness, PlayerEntity player){
+        Optional<RenderwareBinaryStream.Frame> frame = getFrameByName("wheel");
+        if(!frame.isPresent()) return;
+        Optional<Geometry> geometry = getFrameGeometry(frame.get());
+        if(!geometry.isPresent()) return;
+        geometry.get().render(brightness, (float)player.x, (float)player.y + player.standingEyeHeight, (float)player.z);
+    }
+
     public void render(double x, double y, double z, float brightness, PlayerEntity player){
         GL11.glPushMatrix();
         GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
@@ -64,6 +86,26 @@ public class VehicleModel {
             GL11.glPopMatrix();
         }
         GL11.glPopMatrix();
+    }
+
+    public Optional<RenderwareBinaryStream.Frame> getFrameByName(String frameName){
+        if(!frameNames.contains(frameName)) return Optional.empty();
+        return Optional.ofNullable(BinaryStreamHelpers.getStructFrameList(frameList).frames().get(frameNames.indexOf(frameName)));
+    }
+    public Vector3f getFrameOffset(RenderwareBinaryStream.Frame frame){
+        Vector3f vector3f = new Vector3f(0f, 0f, 0f);
+        if(frame.curFrameIdx() != 0){
+            Vector3f vector3f1 = getFrameOffset(BinaryStreamHelpers.getStructFrameList(frameList).frames().get(frame.curFrameIdx()));
+            vector3f.x += vector3f1.x;
+            vector3f.y += vector3f1.y;
+            vector3f.z += vector3f1.z;
+        }
+
+        vector3f.x += frame.position().x();
+        vector3f.y += frame.position().z();
+        vector3f.z += -frame.position().y();
+
+        return vector3f;
     }
 
     private void applyFrameTransformations(RenderwareBinaryStream.Frame frame){
