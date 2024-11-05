@@ -70,6 +70,7 @@ public class PhysicsEngine implements Runnable{
 
         DMass wheelMass = OdeHelper.createMass();
         wheelMass.setSphere(1, 1);
+        wheelMass.adjust(400);
 
         for(int i = 0; i < wheelFrames.size(); i++){
             wheelBodies[i] = OdeHelper.createBody(world);
@@ -92,8 +93,8 @@ public class PhysicsEngine implements Runnable{
             h2.setAnchor(a);
             h2.setAxes (zunit, yunit);
 
-            wheelJoints[i].setParamSuspensionERP(0.9);
-            wheelJoints[i].setParamSuspensionCFM(0.1);
+            wheelJoints[i].setParamSuspensionERP(0.5);
+            wheelJoints[i].setParamSuspensionCFM(0.01);
 
             if(vehicle.get().vehicleModel.getFrameName(wheelFrames.get(i)).substring(7).startsWith("b")){
                 wheelJoints[i].setParamLoStop(0);
