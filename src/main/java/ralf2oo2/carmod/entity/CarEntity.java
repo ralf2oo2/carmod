@@ -6,9 +6,16 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.lwjgl.util.vector.Vector3f;
+import org.ode4j.math.DVector3C;
 import ralf2oo2.carmod.Carmod;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CarEntity extends Entity {
+    public List<DVector3C> relativeWheelPositions;
+    public List<float[]> wheelRotations;
     public float[] rotationMatrix;
     public String carName;
     public CarEntity(World world) {
@@ -33,7 +40,7 @@ public class CarEntity extends Entity {
     }
 
 
-    public void setRotationMatrix(float[] rotationMatrix) {
+    public float[] convertRotationMatrix(float[] rotationMatrix) {
         float[] rotationMatrix4x4 = new float[16];
 
         rotationMatrix4x4[0] = rotationMatrix[0];
@@ -50,7 +57,45 @@ public class CarEntity extends Entity {
 
         rotationMatrix4x4[15] = 1.0f;
 
-        this.rotationMatrix = rotationMatrix4x4;
+        return rotationMatrix4x4;
+    }
+
+    public void setRelativeWheelPositions(List<DVector3C> relativeWheelPositions){
+        this.relativeWheelPositions = relativeWheelPositions;
+    }
+
+    public void setWheelRotations(List<float[]> wheelRotations){
+        this.wheelRotations = new ArrayList<>();
+        for(int i = 0; i < wheelRotations.size(); i++){
+            this.wheelRotations.add(convertRotationMatrix(wheelRotations.get(i)));
+        }
+    }
+
+    public void setRotationMatrix(float[] rotationMatrix){
+        this.rotationMatrix = convertRotationMatrix(rotationMatrix);
+    }
+
+    public float[] getRelativeRotation(float[] M1, float[] M2) {
+
+        float[] relativeRotation = new float[16];
+        float[] M2T = new float[16];
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                M2T[i * 4 + j] = M2[j * 4 + i];
+            }
+        }
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                relativeRotation[i * 4 + j] = 0;
+                for (int k = 0; k < 4; k++) {
+                    relativeRotation[i * 4 + j] += M2T[i * 4 + k] * M1[k * 4 + j];
+                }
+            }
+        }
+
+        return relativeRotation;
     }
 
     @Override

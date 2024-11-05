@@ -63,6 +63,24 @@ public class VehicleModel {
         return Optional.empty();
     }
 
+    public String getFrameName(RenderwareBinaryStream.Frame frame){
+        if(BinaryStreamHelpers.getStructFrameList(frameList).frames().contains(frame)){
+            int index = BinaryStreamHelpers.getStructFrameList(frameList).frames().indexOf(frame);
+            return frameNames.get(index);
+        }
+        return "";
+    }
+
+    public List<RenderwareBinaryStream.Frame> getDummyFrames(){
+        List<RenderwareBinaryStream.Frame> frames = new ArrayList<>();
+        for(int i = 0; i < frameNames.size(); i++){
+            if(frameNames.get(i).endsWith("dummy")){
+                frames.add(BinaryStreamHelpers.getStructFrameList(frameList).frames().get(i));
+            }
+        }
+        return frames;
+    }
+
     public void renderWheel(float brightness, PlayerEntity player){
         Optional<RenderwareBinaryStream.Frame> frame = getFrameByName("wheel");
         if(!frame.isPresent()) return;
