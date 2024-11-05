@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
 import org.checkerframework.checker.units.qual.C;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.ode4j.math.DVector3;
 import org.ode4j.ode.DBody;
@@ -17,6 +18,7 @@ import ralf2oo2.carmod.entity.CarEntity;
 import ralf2oo2.carmod.registry.VehicleRegistry;
 import ralf2oo2.carmod.vehicle.Vehicle;
 
+import java.nio.FloatBuffer;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,13 +37,14 @@ public class CarEntityRenderer extends EntityRenderer {
             GL11.glPushMatrix();
 
             GL11.glTranslatef((float)x, (float)y, (float)z);
-            GL11.glTranslatef(0f, 1f, 0f);
 
-            GL11.glRotatef(carEntity.vehiclePitch, 0.0f, 1.0f, 0.0f);
+            if(carEntity.rotationMatrix != null){
+                FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+                buffer.put(carEntity.rotationMatrix);
+                buffer.flip();
 
-            GL11.glRotatef(carEntity.vehicleYaw - 90, 1.0f, 0.0f, 0.0f);
-
-            GL11.glRotatef(carEntity.vehicleRoll, 0.0f, 0.0f, 1.0f);
+                GL11.glMultMatrix(buffer);
+            }
 
             if(!DebugRenderer.active){
                 vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
@@ -62,13 +65,14 @@ public class CarEntityRenderer extends EntityRenderer {
                 }
             }
             GL11.glPopMatrix();
-            if(bodyReference.get() == null){
+
+            if(false){
                 Carmod.physicsEngine.executionQueue.add(() -> {
                     bodyReference.set(Carmod.physicsEngine.getEntityBody(carEntity).get());
                 });
-            }
-            if(bodyReference.get() == null) return;
-            Iterator<DGeom> iterator = bodyReference.get().getGeomIterator(); // Replace GeometryType with the actual type
+
+                if(bodyReference.get() == null) return;
+                Iterator<DGeom> iterator = bodyReference.get().getGeomIterator(); // Replace GeometryType with the actual type
 
                 while (iterator.hasNext()) {
                     DGeom geom = iterator.next();
@@ -85,6 +89,7 @@ public class CarEntityRenderer extends EntityRenderer {
 
                     GL11.glPopMatrix();
                 }
+            }
         }
     }
 }

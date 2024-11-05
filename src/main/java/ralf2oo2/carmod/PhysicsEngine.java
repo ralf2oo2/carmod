@@ -93,23 +93,8 @@ public class PhysicsEngine implements Runnable{
                     entity.setPosition(body.getPosition().get(0), body.getPosition().get(1), body.getPosition().get(2));
 
                     DMatrix3C rotationMatrix = body.getRotation();
-                    double pitch, yaw, roll;
-                    if (Math.abs(rotationMatrix.get(2, 0)) < 1) { // Check for gimbal lock
-                        yaw = Math.atan2(rotationMatrix.get(0, 0), rotationMatrix.get(1, 0));
-                        pitch = Math.asin(-rotationMatrix.get(2, 0));
-                        roll = Math.atan2(rotationMatrix.get(2, 1), rotationMatrix.get(2, 2));
-                    } else {
-                        // Gimbal lock has occurred.
-                        yaw = Math.atan2(-rotationMatrix.get(1, 2), rotationMatrix.get(1, 1));
-                        pitch = rotationMatrix.get(2, 0) > 0 ? -Math.PI / 2 : Math.PI / 2;
-                        roll = 0; // Roll is not defined in this case.
-                    }
 
-                    yaw = Math.toDegrees(yaw);
-                    pitch = Math.toDegrees(pitch);
-                    roll = Math.toDegrees(roll);
-
-                    entity.setRotation((float)pitch, (float)yaw, (float)roll);
+                    entity.setRotationMatrix(rotationMatrix.toFloatArray());
                 }
                 else {
                     removalQueue.add(entity);
@@ -144,6 +129,7 @@ public class PhysicsEngine implements Runnable{
         for (DContact contact: contacts) {
             contact.surface.mode = dContactBounce | dContactSoftCFM;
             contact.surface.soft_cfm = 1e-4;
+            contact.surface.mu = 0.8d;
         }
         //	if (int numc = dCollide (o1,o2,MAX_CONTACTS,&contact[0].geom,
         //			sizeof(dContact))) {

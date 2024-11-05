@@ -9,9 +9,7 @@ import net.minecraft.world.World;
 import ralf2oo2.carmod.Carmod;
 
 public class CarEntity extends Entity {
-    public float vehiclePitch;
-    public float vehicleYaw;
-    public float vehicleRoll;
+    public float[] rotationMatrix;
     public String carName;
     public CarEntity(World world) {
         super(world);
@@ -35,11 +33,24 @@ public class CarEntity extends Entity {
     }
 
 
-    public void setRotation(float pitch, float yaw, float roll) {
-        super.setRotation(yaw, pitch);
-        this.vehiclePitch = pitch;
-        this.vehicleYaw = yaw;
-        this.vehicleRoll = roll;
+    public void setRotationMatrix(float[] rotationMatrix) {
+        float[] rotationMatrix4x4 = new float[16];
+
+        rotationMatrix4x4[0] = rotationMatrix[0];
+        rotationMatrix4x4[1] = rotationMatrix[3];
+        rotationMatrix4x4[2] = rotationMatrix[6];
+
+        rotationMatrix4x4[4] = rotationMatrix[1];
+        rotationMatrix4x4[5] = rotationMatrix[4];
+        rotationMatrix4x4[6] = rotationMatrix[7];
+
+        rotationMatrix4x4[8] = rotationMatrix[2];
+        rotationMatrix4x4[9] = rotationMatrix[5];
+        rotationMatrix4x4[10] = rotationMatrix[8];
+
+        rotationMatrix4x4[15] = 1.0f;
+
+        this.rotationMatrix = rotationMatrix4x4;
     }
 
     @Override
