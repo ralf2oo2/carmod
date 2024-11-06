@@ -1,6 +1,7 @@
 package ralf2oo2.carmod;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -8,15 +9,20 @@ import net.modificationstation.stationapi.api.tick.TickScheduler;
 import net.modificationstation.stationapi.api.util.math.StationBlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import org.ode4j.math.*;
 import org.ode4j.ode.*;
+import ralf2oo2.carmod.Utils.Math;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 import ralf2oo2.carmod.entity.CarEntity;
 import ralf2oo2.carmod.registry.VehicleRegistry;
 import ralf2oo2.carmod.vehicle.Vehicle;
 import ralf2oo2.carmod.vehicle.VehicleModel;
 
+import java.nio.FloatBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
@@ -33,6 +39,8 @@ public class PhysicsEngine implements Runnable{
     private final Map<CarEntity, DBody[]> collisionBodies = new HashMap<>();
     private final Map<CarEntity, Map<BlockPos, DGeom>> entityWorldCollision = new HashMap<>();
     private final List<CarEntity> removalQueue = new ArrayList<>();
+    public static List<DVector3C> hitPoints = new ArrayList<>();
+    public DGeom ray;
     public final Queue<Runnable> executionQueue = new ConcurrentLinkedQueue<>();
 
     public PhysicsEngine(){
@@ -83,7 +91,7 @@ public class PhysicsEngine implements Runnable{
         for(int i = 0; i < wheelFrames.size(); i++){
             wheelBodies[i] = OdeHelper.createBody(world);
             DQuaternion q = new DQuaternion();
-            OdeMath.dQFromAxisAndAngle (q,0,1,0,Math.PI*0.5);
+            OdeMath.dQFromAxisAndAngle (q,0,1,0, java.lang.Math.PI*0.5);
             wheelBodies[i].setQuaternion(q);
             wheelBodies[i].setMass(wheelMass);
 
@@ -131,6 +139,31 @@ public class PhysicsEngine implements Runnable{
         }
         collisionBodies.put(entity, bodies.toArray(new DBody[0]));
         entityWorldCollision.put(entity, new HashMap<>());
+    }
+
+    public Optional<CarEntity> rayCast(PlayerEntity player, float length){
+        hitPoints.clear();
+        DRay ray = OdeHelper.createRay(space, length);
+        DVector3C lookPos = new DVector3(player.x, player.y, player.z);
+        Vec3d lookVector = player.getLookVector();
+        Vec3d up = Vec3d.create(0, 1, 0);
+        Vec3d right = up.crossProduct(lookVector).normalize();
+        Vec3d recalculatedUp = lookVector.crossProduct(right).normalize();
+
+        DMatrix3 rotationMatrix = new DMatrix3(
+                right.x, recalculatedUp.x, lookVector.x,  // First column
+                right.y, recalculatedUp.y, lookVector.y,  // Second column
+                right.z, recalculatedUp.z, lookVector.z
+        );
+
+        ray.setPosition(lookPos);
+        ray.setRotation(rotationMatrix);
+
+        RaycastCallback callback = new RaycastCallback(ray);
+        space.collide(space, callback);
+        this.ray = ray;
+        ray.destroy();
+        return Optional.empty();
     }
 
     private List<RenderwareBinaryStream.Frame> getWheelFrames(VehicleModel model){
@@ -287,6 +320,24 @@ public class PhysicsEngine implements Runnable{
                 c.attach(
                         contact.geom.g1.getBody(),
                         contact.geom.g2.getBody());
+            }
+        }
+    }
+}
+class RaycastCallback implements DGeom.DNearCallback{
+    DGeom ray;
+    public RaycastCallback(DGeom ray){
+        this.ray = ray;
+    }
+    @Override
+    public void call(Object data, DGeom o1, DGeom o2) {
+        if (o1 == ray || o2 == ray) {
+            if(o1.getBody() != null || o2.getBody() != null){
+                DContactGeomBuffer contact = new DContactGeomBuffer(1);
+                if (OdeHelper.collide(o1, o2, 1, contact) > 0) {
+                    System.out.println("Ray hit an object!");
+                    PhysicsEngine.hitPoints.add(contact.get(0).pos);
+                }
             }
         }
     }

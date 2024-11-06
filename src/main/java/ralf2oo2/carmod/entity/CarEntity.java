@@ -1,6 +1,7 @@
 package ralf2oo2.carmod.entity;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
@@ -31,6 +32,12 @@ public class CarEntity extends Entity {
         Carmod.physicsEngine.executionQueue.add(() -> {
             Carmod.physicsEngine.registerEntity(this);
         });
+    }
+
+    @Override
+    public boolean interact(PlayerEntity player) {
+        System.out.println("Interacted");
+        return super.interact(player);
     }
 
     @Override
