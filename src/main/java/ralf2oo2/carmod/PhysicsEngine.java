@@ -5,11 +5,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.modificationstation.stationapi.api.tick.TickScheduler;
-import net.modificationstation.stationapi.api.util.math.Matrix3f;
 import net.modificationstation.stationapi.api.util.math.StationBlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import org.ode4j.math.*;
 import org.ode4j.ode.*;
@@ -93,11 +91,20 @@ public class PhysicsEngine implements Runnable{
             cylinder.setBody(wheelBodies[i]);
 
             Vector3f wheelOffset = vehicle.get().vehicleModel.getFrameOffset(wheelFrames.get(i));
+
+            float rotatedX = -wheelOffset.x;  // Inverting X
+            float rotatedZ = -wheelOffset.z;
+
             float suspensionHeight = 0.3f;
-            wheelBodies[i].setPosition(wheelOffset.x + body.getPosition().get0(), (wheelOffset.y - suspensionHeight) + body.getPosition().get1(), wheelOffset.z + body.getPosition().get2());
+            wheelBodies[i].setPosition(rotatedX + body.getPosition().get0(), (wheelOffset.y - suspensionHeight) + body.getPosition().get1(), rotatedZ + body.getPosition().get2());
 
             wheelJoints[i] = OdeHelper.createHinge2Joint(world, null);
             wheelJoints[i].attach(body, wheelBodies[i]);
+            if(vehicle.get().vehicleModel.getFrameName(wheelFrames.get(i)).substring(6).startsWith("l")){
+                entity.wheelSides.add("left");
+            } else {
+                entity.wheelSides.add("right");
+            }
 
             final DVector3C a = wheelBodies[i].getPosition();
             DHinge2Joint h2 = wheelJoints[i];
@@ -175,15 +182,15 @@ public class PhysicsEngine implements Runnable{
                     entity.setRotationMatrix(rotationMatrix.toFloatArray());
 
                     List<float[]> wheelRotations = new ArrayList<>();
-                    
-                    List<DVector3C> relativeWheelPosisions = new ArrayList<>();
+
+                    List<DVector3C> wheelPosisions = new ArrayList<>();
                     for(int i = 1; i < entry.getValue().length; i++){
                         wheelRotations.add(entry.getValue()[i].getRotation().toFloatArray());
                         DVector3C vector = entry.getValue()[i].getPosition();
-                        relativeWheelPosisions.add(new DVector3(vector.get0() - body.getPosition().get0(), vector.get1() - body.getPosition().get1(), vector.get2() - body.getPosition().get2()));
+                        wheelPosisions.add(vector);
                     }
 
-                    entity.setRelativeWheelPositions(relativeWheelPosisions);
+                    entity.setWheelPositions(wheelPosisions);
                     entity.setWheelRotations(wheelRotations);
                 }
                 else {

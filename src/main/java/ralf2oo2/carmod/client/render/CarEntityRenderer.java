@@ -4,9 +4,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.modificationstation.stationapi.api.util.math.MathHelper;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Matrix4f;
 import org.ode4j.math.DVector3;
 import org.ode4j.math.DVector3C;
 import org.ode4j.ode.DBody;
@@ -15,6 +17,7 @@ import org.ode4j.ode.DGeom;
 import org.ode4j.ode.DSphere;
 import ralf2oo2.carmod.Carmod;
 import ralf2oo2.carmod.CarmodClient;
+import ralf2oo2.carmod.Utils.Math;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
 import ralf2oo2.carmod.entity.CarEntity;
 import ralf2oo2.carmod.registry.VehicleRegistry;
@@ -44,16 +47,11 @@ public class CarEntityRenderer extends EntityRenderer {
             GL11.glTranslatef((float)x, (float)y, (float)z);
 
             if(carEntity.rotationMatrix != null){
-                FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-                buffer.put(carEntity.rotationMatrix);
-                buffer.flip();
-
-                GL11.glMultMatrix(buffer);
+                applyMatrix(carEntity.rotationMatrix);
             }
 
             if(!DebugRenderer.active){
                 vehicle.get().vehicleModel.render(x, y, z, carEntity.getBrightnessAtEyes(h), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
-                renderWheels(vehicle.get(), carEntity, h);
             }
             else {
                 RenderwareBinaryStream.Col collisions = vehicle.get().vehicleCollisions.collisions;
@@ -72,7 +70,9 @@ public class CarEntityRenderer extends EntityRenderer {
             }
             GL11.glPopMatrix();
 
-            if(true){
+            renderWheels(vehicle.get(), carEntity, h);
+
+            if(false){
                 if(bodyReference.get() == null) return;
                 for(int i = 0; i < bodyReference.get().length; i++){
                     Iterator<DGeom> iterator = bodyReference.get()[i].getGeomIterator(); // Replace GeometryType with the actual type
@@ -85,14 +85,14 @@ public class CarEntityRenderer extends EntityRenderer {
                         if(geom instanceof DSphere){
                             GL11.glPushMatrix();
                             GL11.glTranslatef(relativePosX, relativePosY, relativePosZ);
-                            applyMatrix(geom.getRotation().toFloatArray(), carEntity);
+                            applyMatrix(Math.convertMatrix(geom.getRotation().toFloatArray()));
                             DebugRenderer.renderSphere((float)((DSphere)geom).getRadius());
                             GL11.glPopMatrix();
                         }
                         if(geom instanceof DCylinder){
                             GL11.glPushMatrix();
                             GL11.glTranslatef(relativePosX, relativePosY, relativePosZ);
-                            applyMatrix(geom.getRotation().toFloatArray(), carEntity);
+                            applyMatrix(Math.convertMatrix(geom.getRotation().toFloatArray()));
                             DebugRenderer.renderCylinder((float)((DCylinder)geom).getRadius(), (float)((DCylinder)geom).getLength());
                             GL11.glPopMatrix();
                         }
@@ -103,30 +103,29 @@ public class CarEntityRenderer extends EntityRenderer {
     }
 
     // TODO: move convertMatrix to util, this sucks
-    private void applyMatrix(float[] matrix, CarEntity carEntity){
+    private void applyMatrix(Matrix4f matrix){
         FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-
-        buffer.put(carEntity.convertRotationMatrix(matrix));
+        matrix.store(buffer);
         buffer.flip();
         GL11.glMultMatrix(buffer);
     }
 
     private void renderWheels(Vehicle vehicle, CarEntity carEntity, float delta){
-        if(carEntity.relativeWheelPositions == null || carEntity.wheelRotations == null) return;
-        for(int i = 0; i < carEntity.relativeWheelPositions.size(); i++){
+        if(carEntity.wheelPositions == null || carEntity.wheelRotations == null) return;
+        PlayerEntity player = ((Minecraft)FabricLoader.getInstance().getGameInstance()).player;
+        for(int i = 0; i < carEntity.wheelPositions.size(); i++){
             GL11.glPushMatrix();
-            DVector3C relativeWheelPosition = carEntity.relativeWheelPositions.get(i);
-            GL11.glTranslatef((float)relativeWheelPosition.get0(), (float)relativeWheelPosition.get1(), (float)relativeWheelPosition.get2());
+            DVector3C wheelPosition = carEntity.wheelPositions.get(i);
+            GL11.glTranslatef((float)(wheelPosition.get0() - MathHelper.lerp(delta, player.prevX, player.x)), (float)(wheelPosition.get1() - MathHelper.lerp(delta, player.prevY, player.y)), (float)(wheelPosition.get2() - MathHelper.lerp(delta, player.prevZ, player.z)));
 
-            float[] relativeWheelRotation = carEntity.getRelativeRotation(carEntity.wheelRotations.get(i), carEntity.rotationMatrix);
+            applyMatrix(carEntity.wheelRotations.get(i));
+            if(carEntity.wheelSides.get(i) == "left"){
+                GL11.glRotatef(-90f, 0f, 1f, 0f);
+            } else if(carEntity.wheelSides.get(i) == "right"){
+                GL11.glRotatef(90f, 0f, 1f, 0f);
+            }
 
-            FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-            buffer.put(relativeWheelRotation);
-            buffer.flip();
-
-            GL11.glMultMatrix(buffer);
-
-            vehicle.vehicleModel.renderWheel(carEntity.getBrightnessAtEyes(delta), ((Minecraft)FabricLoader.getInstance().getGameInstance()).player);
+            vehicle.vehicleModel.renderWheel(carEntity.getBrightnessAtEyes(delta), player);
             GL11.glPopMatrix();
         }
     }
