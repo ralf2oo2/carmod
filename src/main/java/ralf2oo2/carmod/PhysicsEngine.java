@@ -5,9 +5,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.modificationstation.stationapi.api.tick.TickScheduler;
+import net.modificationstation.stationapi.api.util.math.Matrix3f;
 import net.modificationstation.stationapi.api.util.math.StationBlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import org.ode4j.math.*;
 import org.ode4j.ode.*;
@@ -26,7 +28,7 @@ public class PhysicsEngine implements Runnable{
     private static final int MAX_CONTACTS = 10;
     private static final int BOUNDING_PADDING = 2;
     private static final DVector3C yunit = new DVector3(0, 1, 0);
-    private static final DVector3C zunit = new DVector3(0, 0, 1);
+    private static final DVector3C zunit = new DVector3(-1, 0, 0);
     private final DWorld world;
     private final DSpace space;
     private final DJointGroup contactGroup;
@@ -68,7 +70,7 @@ public class PhysicsEngine implements Runnable{
         meshGeom.setBody(body);
         DMass mass = OdeHelper.createMass();
         RenderwareBinaryStream.ColBounds bounds = collisions.header().bounds();
-        mass.setBoxTotal(1500d, bounds.max().z() - bounds.min().z(), bounds.max().x() - bounds.min().x(), bounds.max().y() - bounds.min().y());
+        mass.setBoxTotal(10f, bounds.max().z() - bounds.min().z(), bounds.max().x() - bounds.min().x(), bounds.max().y() - bounds.min().y());
         body.setMass(mass);
 
         List<RenderwareBinaryStream.Frame> wheelFrames = getWheelFrames(vehicle.get().vehicleModel);
@@ -77,21 +79,22 @@ public class PhysicsEngine implements Runnable{
         DHinge2Joint[] wheelJoints = new DHinge2Joint[wheelFrames.size()];
 
         DMass wheelMass = OdeHelper.createMass();
-        wheelMass.setSphere(1, 1);
-        wheelMass.adjust(400);
+        wheelMass.setCylinder(1, 1, 0.7, 0.3);
+        wheelMass.adjust(1f);
 
         for(int i = 0; i < wheelFrames.size(); i++){
             wheelBodies[i] = OdeHelper.createBody(world);
             DQuaternion q = new DQuaternion();
-            OdeMath.dQFromAxisAndAngle (q,1,0,0,Math.PI*0.5);
+            OdeMath.dQFromAxisAndAngle (q,0,1,0,Math.PI*0.5);
             wheelBodies[i].setQuaternion(q);
             wheelBodies[i].setMass(wheelMass);
 
-            DGeom sphere = OdeHelper.createSphere(space, 0.7d);
-            sphere.setBody(wheelBodies[i]);
+            DGeom cylinder = OdeHelper.createCylinder(space, 0.3d, 0.2);
+            cylinder.setBody(wheelBodies[i]);
 
             Vector3f wheelOffset = vehicle.get().vehicleModel.getFrameOffset(wheelFrames.get(i));
-            wheelBodies[i].setPosition(wheelOffset.x + body.getPosition().get0(), wheelOffset.y + body.getPosition().get1(), wheelOffset.z + body.getPosition().get2());
+            float suspensionHeight = 0.3f;
+            wheelBodies[i].setPosition(wheelOffset.x + body.getPosition().get0(), (wheelOffset.y - suspensionHeight) + body.getPosition().get1(), wheelOffset.z + body.getPosition().get2());
 
             wheelJoints[i] = OdeHelper.createHinge2Joint(world, null);
             wheelJoints[i].attach(body, wheelBodies[i]);
@@ -99,10 +102,15 @@ public class PhysicsEngine implements Runnable{
             final DVector3C a = wheelBodies[i].getPosition();
             DHinge2Joint h2 = wheelJoints[i];
             h2.setAnchor(a);
-            h2.setAxes (zunit, yunit);
+            h2.setAxes(0,1,0 ,-1, 0, 0);
+            h2.setParamVel2(0);
+            h2.setParamFMax2(25f);
+            h2.setParamFMax(25f);
 
-            wheelJoints[i].setParamSuspensionERP(0.5);
-            wheelJoints[i].setParamSuspensionCFM(0.01);
+            wheelJoints[i].setParamSuspensionERP(0.8f);
+            wheelJoints[i].setParamSuspensionCFM(0.14f);
+
+            wheelJoints[i].setParamVel2(5.0);
 
             if(vehicle.get().vehicleModel.getFrameName(wheelFrames.get(i)).substring(7).startsWith("b")){
                 wheelJoints[i].setParamLoStop(0);
@@ -167,11 +175,12 @@ public class PhysicsEngine implements Runnable{
                     entity.setRotationMatrix(rotationMatrix.toFloatArray());
 
                     List<float[]> wheelRotations = new ArrayList<>();
+                    
                     List<DVector3C> relativeWheelPosisions = new ArrayList<>();
                     for(int i = 1; i < entry.getValue().length; i++){
                         wheelRotations.add(entry.getValue()[i].getRotation().toFloatArray());
                         DVector3C vector = entry.getValue()[i].getPosition();
-                        relativeWheelPosisions.add(new DVector3(vector.get0() - entity.x, vector.get1() - entity.y, vector.get2() - entity.z));
+                        relativeWheelPosisions.add(new DVector3(vector.get0() - body.getPosition().get0(), vector.get1() - body.getPosition().get1(), vector.get2() - body.getPosition().get2()));
                     }
 
                     entity.setRelativeWheelPositions(relativeWheelPosisions);
@@ -212,7 +221,7 @@ public class PhysicsEngine implements Runnable{
                     int id = minecraft.world.getBlockId(blockPos.x, blockPos.y, blockPos.z);
                     if(id > 0) {
                         DGeom block = OdeHelper.createBox(space, 1, 1, 1);
-                        block.setPosition((double) blockPos.x + 0.5, (double) blockPos.y, (double) blockPos.z + 0.5);
+                        block.setPosition((double) blockPos.x + 0.5, (double) blockPos.y + 0.5, (double) blockPos.z + 0.5);
                         worldCollision.put(blockPos.toImmutable(), block);
                     }
                 }

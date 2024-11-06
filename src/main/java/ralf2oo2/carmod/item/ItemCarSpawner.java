@@ -19,7 +19,7 @@ public class ItemCarSpawner extends TemplateItem {
     public boolean useOnBlock(ItemStack stack, PlayerEntity user, World world, int x, int y, int z, int side) {
         CarEntity carEntity = new CarEntity(world);
         carEntity.x = x;
-        carEntity.y = y + 1;
+        carEntity.y = y + 5;
         carEntity.z = z;
         carEntity.carName = "test";
         world.spawnEntity(carEntity);

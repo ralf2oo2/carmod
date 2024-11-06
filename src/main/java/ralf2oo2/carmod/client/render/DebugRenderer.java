@@ -2,6 +2,7 @@ package ralf2oo2.carmod.client.render;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.glu.Cylinder;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.glu.Sphere;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
@@ -37,6 +38,12 @@ public class DebugRenderer {
         Sphere sphere = new Sphere();
         sphere.setDrawStyle(GLU.GLU_LINE);
         sphere.draw(radius, 16, 16);
+    }
+    public static void renderCylinder(float radius, float width){
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        Cylinder cylinder = new Cylinder();
+        cylinder.setDrawStyle(GLU.GLU_LINE);
+        cylinder.draw(radius, radius, width, 16, 16);
     }
 
     public static void renderFaces(float x, float y, float z, ArrayList<RenderwareBinaryStream.ColFace> faces, ArrayList<RenderwareBinaryStream.ColVertex> vertices){

@@ -10,6 +10,7 @@ import org.lwjgl.util.vector.Vector3f;
 import org.ode4j.math.DVector3;
 import org.ode4j.math.DVector3C;
 import org.ode4j.ode.DBody;
+import org.ode4j.ode.DCylinder;
 import org.ode4j.ode.DGeom;
 import org.ode4j.ode.DSphere;
 import ralf2oo2.carmod.Carmod;
@@ -71,34 +72,48 @@ public class CarEntityRenderer extends EntityRenderer {
             }
             GL11.glPopMatrix();
 
-            if(false){
-
-
+            if(true){
                 if(bodyReference.get() == null) return;
-                Iterator<DGeom> iterator = bodyReference.get()[0].getGeomIterator(); // Replace GeometryType with the actual type
-
-                while (iterator.hasNext()) {
-                    DGeom geom = iterator.next();
-                    if(!(geom instanceof DSphere)) continue;
-                    GL11.glPushMatrix();
-                    DVector3 vector = (DVector3) geom.getPosition();
-                    float relativePosX = (float)(vector.get0() - CarmodClient.getMc().player.x);
-                    float relativePosY = (float)(vector.get1() - CarmodClient.getMc().player.y);
-                    float relativePosZ = (float)(vector.get2() - CarmodClient.getMc().player.z);
-                    GL11.glTranslatef(relativePosX, relativePosY, relativePosZ);
-
-                    DebugRenderer.renderSphere((float)((DSphere)geom).getRadius());
-                    //VehicleRegistry.getVehicle("test").get().vehicleModel.render(relativePosX, relativePosY, relativePosZ, 1f, CarmodClient.getMc().player);
-
-                    GL11.glPopMatrix();
+                for(int i = 0; i < bodyReference.get().length; i++){
+                    Iterator<DGeom> iterator = bodyReference.get()[i].getGeomIterator(); // Replace GeometryType with the actual type
+                    while (iterator.hasNext()) {
+                        DGeom geom = iterator.next();
+                        DVector3 vector = (DVector3) geom.getPosition();
+                        float relativePosX = (float)(vector.get0() - CarmodClient.getMc().player.x);
+                        float relativePosY = (float)(vector.get1() - CarmodClient.getMc().player.y);
+                        float relativePosZ = (float)(vector.get2() - CarmodClient.getMc().player.z);
+                        if(geom instanceof DSphere){
+                            GL11.glPushMatrix();
+                            GL11.glTranslatef(relativePosX, relativePosY, relativePosZ);
+                            applyMatrix(geom.getRotation().toFloatArray(), carEntity);
+                            DebugRenderer.renderSphere((float)((DSphere)geom).getRadius());
+                            GL11.glPopMatrix();
+                        }
+                        if(geom instanceof DCylinder){
+                            GL11.glPushMatrix();
+                            GL11.glTranslatef(relativePosX, relativePosY, relativePosZ);
+                            applyMatrix(geom.getRotation().toFloatArray(), carEntity);
+                            DebugRenderer.renderCylinder((float)((DCylinder)geom).getRadius(), (float)((DCylinder)geom).getLength());
+                            GL11.glPopMatrix();
+                        }
+                    }
                 }
             }
         }
     }
 
+    // TODO: move convertMatrix to util, this sucks
+    private void applyMatrix(float[] matrix, CarEntity carEntity){
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+
+        buffer.put(carEntity.convertRotationMatrix(matrix));
+        buffer.flip();
+        GL11.glMultMatrix(buffer);
+    }
+
     private void renderWheels(Vehicle vehicle, CarEntity carEntity, float delta){
         if(carEntity.relativeWheelPositions == null || carEntity.wheelRotations == null) return;
-        for(int i = 1; i < carEntity.relativeWheelPositions.size(); i++){
+        for(int i = 0; i < carEntity.relativeWheelPositions.size(); i++){
             GL11.glPushMatrix();
             DVector3C relativeWheelPosition = carEntity.relativeWheelPositions.get(i);
             GL11.glTranslatef((float)relativeWheelPosition.get0(), (float)relativeWheelPosition.get1(), (float)relativeWheelPosition.get2());
