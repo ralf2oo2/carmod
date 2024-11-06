@@ -3,6 +3,7 @@ package ralf2oo2.carmod;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.modificationstation.stationapi.api.tick.TickScheduler;
 import net.modificationstation.stationapi.api.util.math.StationBlockPos;
 import org.apache.logging.log4j.LogManager;
@@ -23,14 +24,14 @@ import java.util.stream.Stream;
 public class PhysicsEngine implements Runnable{
     private static final Logger logger = LogManager.getLogger(PhysicsEngine.class);
     private static final int MAX_CONTACTS = 10;
-    private static final int BOUNDING_PADDING = 1;
+    private static final int BOUNDING_PADDING = 2;
     private static final DVector3C yunit = new DVector3(0, 1, 0);
     private static final DVector3C zunit = new DVector3(0, 0, 1);
     private final DWorld world;
     private final DSpace space;
     private final DJointGroup contactGroup;
     private final Map<CarEntity, DBody[]> collisionBodies = new HashMap<>();
-    private final Map<BlockPos, DGeom> worldCollision = new HashMap<>();
+    private final Map<CarEntity, Map<BlockPos, DGeom>> entityWorldCollision = new HashMap<>();
     private final List<CarEntity> removalQueue = new ArrayList<>();
     public final Queue<Runnable> executionQueue = new ConcurrentLinkedQueue<>();
 
@@ -114,6 +115,7 @@ public class PhysicsEngine implements Runnable{
             bodies.add(wheelBodies[i]);
         }
         collisionBodies.put(entity, bodies.toArray(new DBody[0]));
+        entityWorldCollision.put(entity, new HashMap<>());
     }
 
     private List<RenderwareBinaryStream.Frame> getWheelFrames(VehicleModel model){
@@ -187,18 +189,23 @@ public class PhysicsEngine implements Runnable{
         for (Map.Entry<CarEntity, DBody[]> entry : collisionBodies.entrySet()) {
             CarEntity carEntity = entry.getKey();
             if(carEntity.prevX == carEntity.x) return;
+
+
+            Map<BlockPos, DGeom> worldCollision = this.entityWorldCollision.get(entry.getKey());
             Vehicle vehicle = VehicleRegistry.getVehicle(carEntity.carName).get();
             RenderwareBinaryStream.ColBounds bounds = vehicle.vehicleCollisions.collisions.header().bounds();
             float width = bounds.max().y() - bounds.min().y();
             float height = bounds.max().z() - bounds.min().z();
+
+            Box boundingBox = Box.create(carEntity.x - (width  * 0.5 + BOUNDING_PADDING),
+                    carEntity.y - (height  * 0.5 + BOUNDING_PADDING),
+                    carEntity.z - (width  * 0.5 + BOUNDING_PADDING),
+                    carEntity.x + (width  * 0.5 + BOUNDING_PADDING),
+                    carEntity.y + (height  * 0.5 + BOUNDING_PADDING),
+                    carEntity.z + (width  * 0.5 + BOUNDING_PADDING));
+
             //BlockPos entityPos = new BlockPos((int)Math.floor(carEntity.x), (int)Math.floor(carEntity.y), (int)Math.floor(carEntity.z));
-            Stream<BlockPos> blockStream = StationBlockPos.stream(Box.create(carEntity.x - (width  * 0.5 + BOUNDING_PADDING),
-                                            carEntity.y - (height  * 0.5 + BOUNDING_PADDING),
-                                            carEntity.z - (width  * 0.5 + BOUNDING_PADDING),
-                                            carEntity.x + (width  * 0.5 + BOUNDING_PADDING),
-                                            carEntity.y + (height  * 0.5 + BOUNDING_PADDING),
-                                            carEntity.z + (width  * 0.5 + BOUNDING_PADDING)
-            ));
+            Stream<BlockPos> blockStream = StationBlockPos.stream(boundingBox);
 
             blockStream.forEach(blockPos -> {
                 if(!worldCollision.containsKey(blockPos.toImmutable())){
@@ -211,6 +218,18 @@ public class PhysicsEngine implements Runnable{
                 }
             });
 
+            List<BlockPos> outOfRangeBlocks = new ArrayList<>();
+            for (Map.Entry<BlockPos, DGeom> collisionEntry : worldCollision.entrySet()) {
+                BlockPos currentBlockPos = collisionEntry.getKey();
+                if(!boundingBox.contains(Vec3d.create(currentBlockPos.x, currentBlockPos.y, currentBlockPos.z))){
+                    outOfRangeBlocks.add(currentBlockPos);
+                    space.remove(collisionEntry.getValue());
+                    collisionEntry.getValue().destroy();
+                }
+            }
+            for(int i = 0; i < outOfRangeBlocks.size(); i++){
+                worldCollision.remove(outOfRangeBlocks.get(i));
+            }
 //            TickScheduler.CLIENT_RENDER_START.immediate(() -> {
 //            });
         }
