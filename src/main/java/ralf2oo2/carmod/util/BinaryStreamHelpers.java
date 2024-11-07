@@ -1,4 +1,4 @@
-package ralf2oo2.carmod.Utils;
+package ralf2oo2.carmod.util;
 
 public class BinaryStreamHelpers {
     public static RenderwareBinaryStream.StructAtomic getStructAtomic(RenderwareBinaryStream stream){

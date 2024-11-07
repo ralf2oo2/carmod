@@ -1,4 +1,4 @@
-package ralf2oo2.carmod.Utils;
+package ralf2oo2.carmod.util;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;

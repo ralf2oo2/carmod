@@ -1,6 +1,5 @@
 package ralf2oo2.carmod.client.render;
 
-import net.minecraft.util.math.Vec3d;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.Cylinder;
@@ -11,9 +10,9 @@ import org.ode4j.ode.DCylinder;
 import org.ode4j.ode.DGeom;
 import org.ode4j.ode.DRay;
 import org.ode4j.ode.DSphere;
-import ralf2oo2.carmod.Utils.Math;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
-import ralf2oo2.carmod.Utils.Util;
+import ralf2oo2.carmod.util.Math;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.Util;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;

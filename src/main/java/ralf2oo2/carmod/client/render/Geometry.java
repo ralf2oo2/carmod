@@ -2,7 +2,7 @@ package ralf2oo2.carmod.client.render;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.*;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
 import ralf2oo2.carmod.registry.VehicleTextureRegistry;
 
 import java.nio.FloatBuffer;

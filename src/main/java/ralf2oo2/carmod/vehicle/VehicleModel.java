@@ -1,13 +1,11 @@
 package ralf2oo2.carmod.vehicle;
 
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
-import ralf2oo2.carmod.Utils.BinaryStreamHelpers;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.BinaryStreamHelpers;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
 import ralf2oo2.carmod.client.render.Geometry;
-import ralf2oo2.carmod.registry.VehicleTextureRegistry;
 
 import java.util.ArrayList;
 import java.util.List;

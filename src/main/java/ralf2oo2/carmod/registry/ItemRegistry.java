@@ -12,6 +12,7 @@ import ralf2oo2.carmod.item.ItemCarSpawner;
 
 public class ItemRegistry {
     public static Item carSpawner;
+    public static Item pushStick;
 
     @Entrypoint.Namespace
     public static final Namespace NAMESPACE = Null.get();
@@ -19,5 +20,8 @@ public class ItemRegistry {
     @EventListener
     public void registerItems(ItemRegistryEvent event) {
         carSpawner = new ItemCarSpawner(Identifier.of(NAMESPACE, "carspawner")).setTranslationKey(NAMESPACE, "carspawner");
+        pushStick = new TemplateItem(Identifier.of(NAMESPACE, "push_stick")).setTranslationKey(NAMESPACE, "push_stick");
+
+        pushStick.setTexturePosition(5, 3);
     }
 }

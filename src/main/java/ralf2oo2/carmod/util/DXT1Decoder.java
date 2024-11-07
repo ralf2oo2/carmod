@@ -1,6 +1,5 @@
-package ralf2oo2.carmod.Utils;
+package ralf2oo2.carmod.util;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class DXT1Decoder {

@@ -1,10 +1,6 @@
-package ralf2oo2.carmod.Utils;
+package ralf2oo2.carmod.util;
 
-import org.lwjgl.BufferUtils;
-import org.lwjgl.util.vector.Matrix3f;
 import org.lwjgl.util.vector.Matrix4f;
-
-import java.nio.FloatBuffer;
 
 public class Math {
     public static Matrix4f convertMatrix(float[] rotationMatrix) {

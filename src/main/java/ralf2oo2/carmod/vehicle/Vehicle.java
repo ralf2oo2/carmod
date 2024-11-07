@@ -2,10 +2,9 @@ package ralf2oo2.carmod.vehicle;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
 
 import java.io.IOException;
-import java.util.Optional;
 
 public class Vehicle {
     private RenderwareBinaryStream binaryStream;

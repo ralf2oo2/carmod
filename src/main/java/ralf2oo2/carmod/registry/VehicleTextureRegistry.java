@@ -4,9 +4,9 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.mine_diver.unsafeevents.listener.EventListener;
 import net.modificationstation.stationapi.api.client.event.texture.TextureRegisterEvent;
 import org.lwjgl.opengl.GL11;
-import ralf2oo2.carmod.Utils.BinaryStreamHelpers;
-import ralf2oo2.carmod.Utils.DDSReader;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.BinaryStreamHelpers;
+import ralf2oo2.carmod.util.DDSReader;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
 import ralf2oo2.carmod.client.render.TxdTexture;
 
 import java.io.IOException;

@@ -6,29 +6,14 @@ import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
-import net.modificationstation.stationapi.api.tick.TickScheduler;
-import net.modificationstation.stationapi.api.util.math.MathHelper;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Matrix4f;
-import org.ode4j.math.DVector3;
-import org.ode4j.math.DVector3C;
-import org.ode4j.ode.*;
-import ralf2oo2.carmod.Carmod;
-import ralf2oo2.carmod.CarmodClient;
-import ralf2oo2.carmod.PhysicsEngine;
-import ralf2oo2.carmod.Utils.Math;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
-import ralf2oo2.carmod.Utils.Util;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.Util;
 import ralf2oo2.carmod.entity.CarEntity;
 import ralf2oo2.carmod.registry.VehicleRegistry;
 import ralf2oo2.carmod.vehicle.Vehicle;
 
-import java.nio.FloatBuffer;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class CarEntityRenderer extends EntityRenderer {
     @Override

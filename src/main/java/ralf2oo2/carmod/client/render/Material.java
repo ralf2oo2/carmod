@@ -1,8 +1,5 @@
 package ralf2oo2.carmod.client.render;
 
-import org.lwjgl.util.vector.Vector4f;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
-
 public class Material {
     int flags;
     Rgba color;

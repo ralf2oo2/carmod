@@ -1,6 +1,6 @@
 package ralf2oo2.carmod.client.render;
 
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
 
 public class TxdTexture {
     public int textureId;

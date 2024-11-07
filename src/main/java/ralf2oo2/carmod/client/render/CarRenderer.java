@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
 import ralf2oo2.carmod.registry.VehicleTextureRegistry;
 
 import java.nio.FloatBuffer;

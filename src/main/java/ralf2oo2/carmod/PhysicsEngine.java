@@ -2,6 +2,7 @@ package ralf2oo2.carmod;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -9,20 +10,16 @@ import net.modificationstation.stationapi.api.tick.TickScheduler;
 import net.modificationstation.stationapi.api.util.math.StationBlockPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import org.ode4j.math.*;
 import org.ode4j.ode.*;
-import ralf2oo2.carmod.Utils.Math;
-import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.util.RenderwareBinaryStream;
 import ralf2oo2.carmod.entity.CarEntity;
 import ralf2oo2.carmod.registry.VehicleRegistry;
+import ralf2oo2.carmod.util.raycast.RaycastResult;
 import ralf2oo2.carmod.vehicle.Vehicle;
 import ralf2oo2.carmod.vehicle.VehicleModel;
 
-import java.nio.FloatBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
@@ -37,6 +34,7 @@ public class PhysicsEngine implements Runnable{
     private final DSpace space;
     private final DJointGroup contactGroup;
     private final Map<CarEntity, DBody[]> collisionBodies = new HashMap<>();
+    private final Map<CarEntity, DJoint[]> vehicleJoints = new HashMap<>();
     private final Map<CarEntity, Map<BlockPos, DGeom>> entityWorldCollision = new HashMap<>();
     private final List<CarEntity> removalQueue = new ArrayList<>();
     public static List<DVector3C> hitPoints = new ArrayList<>();
@@ -59,6 +57,14 @@ public class PhysicsEngine implements Runnable{
     }
     public Map<CarEntity, DBody[]> getCollisionBodies(){
         return this.collisionBodies;
+    }
+    public Optional<CarEntity> getEntityByBody(DBody body){
+        for (Map.Entry<CarEntity, DBody[]> entry : collisionBodies.entrySet()) {
+            if(Arrays.asList(entry.getValue()).contains(body)){
+                return Optional.ofNullable(entry.getKey());
+            }
+        }
+        return Optional.empty();
     }
 
     public void registerEntity(CarEntity entity){
@@ -121,18 +127,21 @@ public class PhysicsEngine implements Runnable{
             DHinge2Joint h2 = wheelJoints[i];
             h2.setAnchor(a);
             h2.setAxes(0,1,0 ,-1, 0, 0);
-            h2.setParamVel2(0);
-            h2.setParamFMax2(25f);
-            h2.setParamFMax(25f);
+            //h2.setParamVel2(0);
+            h2.setParamFMax2(0f);
+            h2.setParamFMax(50f);
 
             wheelJoints[i].setParamSuspensionERP(0.8f);
             wheelJoints[i].setParamSuspensionCFM(0.14f);
 
-            wheelJoints[i].setParamVel2(5.0);
-
             if(vehicle.get().vehicleModel.getFrameName(wheelFrames.get(i)).substring(7).startsWith("b")){
+                wheelJoints[i].setParamFMax2(50f);
                 wheelJoints[i].setParamLoStop(0);
                 wheelJoints[i].setParamHiStop(0);
+                wheelJoints[i].setData("b");
+            }
+            else {
+                wheelJoints[i].setData("f");
             }
         }
         ArrayList<DBody> bodies = new ArrayList<>();
@@ -142,9 +151,28 @@ public class PhysicsEngine implements Runnable{
         }
         collisionBodies.put(entity, bodies.toArray(new DBody[0]));
         entityWorldCollision.put(entity, new HashMap<>());
+        vehicleJoints.put(entity, wheelJoints);
     }
 
-    public Optional<CarEntity> rayCast(PlayerEntity player, float length){
+    public void controlVehicle(CarEntity entity, float moveForwards, float moveSideways){
+        DJoint[] joints = vehicleJoints.get(entity);
+        for(int i = 0; i < joints.length; i++){
+            if(joints[i].getData().equals("b")){
+                ((DHinge2Joint)joints[i]).setParamVel2(10.0 * moveForwards);
+            }
+        }
+    }
+    public void applyForceAtPosition(CarEntity carEntity, int bodyIndex, DVector3C forcePosition, DVector3C forceNormal, double force){
+        if(bodyIndex < 0) return;
+        Optional<DBody[]> body = getEntityBodies(carEntity);
+        if(!body.isPresent()) return;
+        if(bodyIndex > body.get().length - 1) return;
+        DVector3C forceVector = forceNormal.reScale(force);
+        forceVector = new DVector3(-forceVector.get0(), -forceVector.get1(), -forceVector.get2());
+        body.get()[bodyIndex].addForceAtPos(forceVector, forcePosition);
+    }
+
+    public Optional<RaycastResult> rayCast(PlayerEntity player, float length){
         hitPoints.clear();
         DRay ray = OdeHelper.createRay(space, length);
         DVector3C lookPos = new DVector3(player.x, player.y, player.z);
@@ -166,7 +194,7 @@ public class PhysicsEngine implements Runnable{
         space.collide(space, callback);
         this.ray = ray;
         ray.destroy();
-        return Optional.empty();
+        return Optional.ofNullable(callback.getResult());
     }
 
     private List<RenderwareBinaryStream.Frame> getWheelFrames(VehicleModel model){
@@ -213,7 +241,7 @@ public class PhysicsEngine implements Runnable{
                 DBody body = entry.getValue()[0];
                 if(entity.isAlive()){
                     entity.setPosition(body.getPosition().get(0), body.getPosition().get(1), body.getPosition().get(2));
-
+                    //controlVehicle(entity, 1, 0);
                     DMatrix3C rotationMatrix = body.getRotation();
                     entity.setRotationMatrix(rotationMatrix.toFloatArray());
 
@@ -329,6 +357,7 @@ public class PhysicsEngine implements Runnable{
 }
 class RaycastCallback implements DGeom.DNearCallback{
     DGeom ray;
+    private RaycastResult raycastResult;
     public RaycastCallback(DGeom ray){
         this.ray = ray;
     }
@@ -338,10 +367,25 @@ class RaycastCallback implements DGeom.DNearCallback{
             if(o1.getBody() != null || o2.getBody() != null){
                 DContactGeomBuffer contact = new DContactGeomBuffer(1);
                 if (OdeHelper.collide(o1, o2, 1, contact) > 0) {
-                    System.out.println("Ray hit an object!");
                     PhysicsEngine.hitPoints.add(contact.get(0).pos);
+                    DGeom target = null;
+                    if(o1.getBody() == null) target = o2;
+                    if(o2.getBody() == null) target = o1;
+                    Optional<CarEntity> carEntity = Carmod.physicsEngine.getEntityByBody(target.getBody());
+                    if(carEntity.isPresent()){
+                        Optional<DBody[]> bodies = Carmod.physicsEngine.getEntityBodies(carEntity.get());
+                        raycastResult = new RaycastResult(
+                                contact.get(0).pos,
+                                contact.get(0).normal,
+                                carEntity.get(),
+                                bodies.isPresent() ? Arrays.asList(bodies.get()).indexOf(target.getBody()) : -1
+                        );
+                    }
                 }
             }
         }
+    }
+    public RaycastResult getResult(){
+        return raycastResult;
     }
 }

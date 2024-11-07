@@ -8,10 +8,13 @@ import net.minecraft.world.World;
 import org.lwjgl.util.vector.Matrix4f;
 import org.ode4j.math.DVector3C;
 import ralf2oo2.carmod.Carmod;
-import ralf2oo2.carmod.Utils.Math;
+import ralf2oo2.carmod.registry.VehicleRegistry;
+import ralf2oo2.carmod.util.Math;
+import ralf2oo2.carmod.vehicle.Vehicle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class CarEntity extends Entity {
     public List<DVector3C> wheelPositions;
@@ -44,6 +47,17 @@ public class CarEntity extends Entity {
     public Box getCollisionAgainstShape(Entity other) {
         System.out.println("collision shape");
         return super.getCollisionAgainstShape(other);
+    }
+
+    @Override
+    public void updatePassengerPosition() {
+        Optional<Vehicle> vehicle = VehicleRegistry.getVehicle(carName);
+        if(vehicle.isPresent()){
+            passenger.setPosition(x, y + 1, z);
+        }
+        else {
+            super.updatePassengerPosition();
+        }
     }
 
     public void setWheelPositions(List<DVector3C> wheelPositions){
