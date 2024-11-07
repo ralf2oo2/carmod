@@ -1,11 +1,19 @@
 package ralf2oo2.carmod.client.render;
 
+import net.minecraft.util.math.Vec3d;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.Cylinder;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.glu.Sphere;
+import org.lwjgl.util.vector.Matrix4f;
+import org.ode4j.ode.DCylinder;
+import org.ode4j.ode.DGeom;
+import org.ode4j.ode.DRay;
+import org.ode4j.ode.DSphere;
+import ralf2oo2.carmod.Utils.Math;
 import ralf2oo2.carmod.Utils.RenderwareBinaryStream;
+import ralf2oo2.carmod.Utils.Util;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -13,10 +21,13 @@ import java.util.ArrayList;
 
 public class DebugRenderer {
     public static boolean active = false;
-    public static boolean renderSpheres = true;
-    public static boolean renderMesh = true;
+    public static boolean renderSpheres = false;
+    public static boolean renderMesh = false;
     public static boolean renderBounds = true;
     public static boolean renderShadowMesh = false;
+    public static boolean renderRay = false;
+    public static boolean renderRayHit = true;
+    public static boolean renderPhysics = true;
 
     public static void renderCollisionSpheres(float x, float y, float z, ArrayList<RenderwareBinaryStream.ColSphere> spheres){
         GL11.glPushMatrix();
@@ -41,9 +52,12 @@ public class DebugRenderer {
     }
     public static void renderCylinder(float radius, float width){
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        GL11.glPushMatrix();
+        GL11.glTranslatef(0.0f, 0.0f, -width / 2);
         Cylinder cylinder = new Cylinder();
         cylinder.setDrawStyle(GLU.GLU_LINE);
         cylinder.draw(radius, radius, width, 16, 16);
+        GL11.glPopMatrix();
     }
 
     public static void renderFaces(float x, float y, float z, ArrayList<RenderwareBinaryStream.ColFace> faces, ArrayList<RenderwareBinaryStream.ColVertex> vertices){
@@ -113,5 +127,37 @@ public class DebugRenderer {
     private static void addLine(float x1, float y1, float z1, float x2, float y2, float z2) {
         GL11.glVertex3f(x1, y1, z1);
         GL11.glVertex3f(x2, y2, z2);
+    }
+
+    public static void renderRay(DRay ray){
+        GL11.glPushMatrix();
+        Matrix4f matrix = Math.convertMatrix(ray.getRotation().toFloatArray());
+        Util.applyMatrix(matrix);
+
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+        GL11.glColor3f(1f, 0f, 0f);
+        GL11.glLineWidth(2.0f);
+        GL11.glBegin(GL11.GL_LINES);
+        GL11.glVertex3f(0f, 0f, 0f);
+        GL11.glVertex3f(0f, 0f, (float)ray.getLength());
+        GL11.glEnd();
+        GL11.glPopMatrix();
+    }
+
+    public static void renderPoint(){
+        GL11.glPointSize(10.0f);
+        GL11.glColor3f(0.0f, 0.0f, 1.0f);
+        GL11.glBegin(GL11.GL_POINTS);
+        GL11.glVertex3f(0f, 0f, 0f);
+        GL11.glEnd();
+    }
+
+    public static void renderDGeom(DGeom geom){
+        if(geom instanceof DSphere){
+            DebugRenderer.renderSphere((float)((DSphere)geom).getRadius());
+        }
+        if(geom instanceof DCylinder){
+            DebugRenderer.renderCylinder((float)((DCylinder)geom).getRadius(), (float)((DCylinder)geom).getLength());
+        }
     }
 }

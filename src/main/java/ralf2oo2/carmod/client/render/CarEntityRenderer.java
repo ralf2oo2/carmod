@@ -64,7 +64,9 @@ public class CarEntityRenderer extends EntityRenderer {
             }
             GL11.glPopMatrix();
 
-            renderWheels(vehicle.get(), carEntity, h);
+            if(!DebugRenderer.active) {
+                renderWheels(vehicle.get(), carEntity, h);
+            }
         }
     }
 

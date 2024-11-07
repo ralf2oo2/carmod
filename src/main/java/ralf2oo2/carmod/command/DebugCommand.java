@@ -9,7 +9,7 @@ import java.util.List;
 
 public class DebugCommand implements Command {
     private String[] options = new String[]{"debug"};
-    private String[] debugOptions = new String[]{"sphere", "mesh", "bounds", "shadowmesh"};
+    private String[] debugOptions = new String[]{"sphere", "mesh", "bounds", "shadowmesh", "ray", "rayhit", "physics"};
     @Override
     public void command(SharedCommandSource commandSource, String[] parameters) {
         System.out.println(commandSource.getName());
@@ -29,6 +29,15 @@ public class DebugCommand implements Command {
                         break;
                     case "shadowmesh":
                         DebugRenderer.renderShadowMesh = !DebugRenderer.renderShadowMesh;
+                        break;
+                    case "ray":
+                        DebugRenderer.renderRay = !DebugRenderer.renderRay;
+                        break;
+                    case "rayhit":
+                        DebugRenderer.renderRayHit = !DebugRenderer.renderRay;
+                        break;
+                    case "physics":
+                        DebugRenderer.renderPhysics = !DebugRenderer.renderPhysics;
                         break;
                 }
                 break;
