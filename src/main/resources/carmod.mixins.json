@@ -4,7 +4,8 @@
   "package": "ralf2oo2.carmod.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "MinecraftMixin"
+    "MinecraftMixin",
+    "WorldRendererMixin"
   ],
   "server": [
   ],

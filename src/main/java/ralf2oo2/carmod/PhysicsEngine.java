@@ -57,6 +57,9 @@ public class PhysicsEngine implements Runnable{
         if(!collisionBodies.containsKey(entity)) return Optional.empty();
         return Optional.ofNullable(collisionBodies.get(entity));
     }
+    public Map<CarEntity, DBody[]> getCollisionBodies(){
+        return this.collisionBodies;
+    }
 
     public void registerEntity(CarEntity entity){
         if(collisionBodies.containsKey(entity)) return;
