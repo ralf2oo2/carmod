@@ -160,6 +160,17 @@ public class PhysicsEngine implements Runnable{
             if(joints[i].getData().equals("b")){
                 ((DHinge2Joint)joints[i]).setParamVel2(10.0 * moveForwards);
             }
+            else{
+                double targetSteeringAngle = Math.toRadians(45 * -moveSideways);
+                double currentSteeringAngle = ((DHinge2Joint)joints[i]).getAngle1();
+
+                double angleError = targetSteeringAngle - currentSteeringAngle;
+                double gain = 1.0f;
+                double maxSteeringForce = 10.0;
+                double steeringVelocity = angleError * gain;
+                ((DHinge2Joint)joints[i]).setParamVel(steeringVelocity);
+                ((DHinge2Joint)joints[i]).setParamFMax(maxSteeringForce);
+            }
         }
     }
     public void applyForceAtPosition(CarEntity carEntity, int bodyIndex, DVector3C forcePosition, DVector3C forceNormal, double force){
