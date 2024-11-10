@@ -37,9 +37,11 @@ public class PhysicsEngine implements Runnable{
     private final Map<CarEntity, DJoint[]> vehicleJoints = new HashMap<>();
     private final Map<CarEntity, Map<BlockPos, DGeom>> entityWorldCollision = new HashMap<>();
     private final List<CarEntity> removalQueue = new ArrayList<>();
+    private long lastFrameTime = System.nanoTime();
     public static List<DVector3C> hitPoints = new ArrayList<>();
     public DGeom ray;
     public final Queue<Runnable> executionQueue = new ConcurrentLinkedQueue<>();
+    public static float frameDelta = 0f;
 
     public PhysicsEngine(){
         OdeHelper.initODE2(0);
@@ -223,11 +225,20 @@ public class PhysicsEngine implements Runnable{
         Runnable command;
         while ((command = executionQueue.poll()) != null) command.run();
     }
+    private void updateFrameDelta(){
+        float physicsInterval = 1.0f / 60.0f;
+        long currentFrameTime = System.nanoTime();
+        float elapsedTime = (currentFrameTime - lastFrameTime) / 1_000_000_000.0f;
+
+        PhysicsEngine.frameDelta = java.lang.Math.min(elapsedTime/ physicsInterval, 1.0f);
+        lastFrameTime = currentFrameTime;
+    }
 
     // TODO: shutdown thread when error occurs
     @Override
     public void run() {
         try{
+            updateFrameDelta();
             handleCollisions();
             world.quickStep(1d / 60);
             contactGroup.empty();
@@ -245,16 +256,40 @@ public class PhysicsEngine implements Runnable{
         space.collide(space, nearCallback);
     }
 
+    public List<DVector3C> getWheelPositions(CarEntity carEntity){
+        DBody[] bodies = getEntityBodies(carEntity).get();
+        List<DVector3C> wheelPosisions = new ArrayList<>();
+        for(int i = 1; i < bodies.length; i++){
+            wheelPosisions.add(bodies[i].getPosition());
+        }
+        return wheelPosisions;
+    }
+    public List<float[]> getWheelRotations(CarEntity carEntity){
+        DBody[] bodies = getEntityBodies(carEntity).get();
+        List<float[]> wheelRotations = new ArrayList<>();
+        for(int i = 1; i < bodies.length; i++){
+            wheelRotations.add(bodies[i].getRotation().toFloatArray());
+        }
+        return wheelRotations;
+    }
+    public DVector3C getBodyPosition(CarEntity carEntity){
+        DBody[] bodies = getEntityBodies(carEntity).get();
+        return bodies[0].getPosition();
+    }
+    public float[] getBodyRotation(CarEntity carEntity){
+        DBody[] bodies = getEntityBodies(carEntity).get();
+        return bodies[0].getRotation().toFloatArray();
+    }
     private void updateEntities(){
         for (Map.Entry<CarEntity, DBody[]> entry : collisionBodies.entrySet()) {
             TickScheduler.CLIENT_RENDER_START.immediate(() -> {
                 CarEntity entity = entry.getKey();
                 DBody body = entry.getValue()[0];
                 if(entity.isAlive()){
-                    entity.setPosition(body.getPosition().get(0), body.getPosition().get(1), body.getPosition().get(2));
+                    //entity.setPosition(body.getPosition().get(0), body.getPosition().get(1), body.getPosition().get(2));
                     //controlVehicle(entity, 1, 0);
                     DMatrix3C rotationMatrix = body.getRotation();
-                    entity.setRotationMatrix(rotationMatrix.toFloatArray());
+                    //entity.setRotationMatrix(rotationMatrix.toFloatArray());
 
                     List<float[]> wheelRotations = new ArrayList<>();
 
@@ -265,8 +300,8 @@ public class PhysicsEngine implements Runnable{
                         wheelPosisions.add(vector);
                     }
 
-                    entity.setWheelPositions(wheelPosisions);
-                    entity.setWheelRotations(wheelRotations);
+                    //entity.setWheelPositions(wheelPosisions);
+                    //entity.setWheelRotations(wheelRotations);
                 }
                 else {
                     removalQueue.add(entity);
