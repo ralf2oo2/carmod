@@ -98,31 +98,31 @@ public class CarEntity extends Entity {
         if(carName == null){
             dead = true;
         } else {
-            CompletableFuture<DVector3C> vehiclePositionFuture = new CompletableFuture<>();
-            CompletableFuture<float[]> vehicleRotationFuture = new CompletableFuture<>();
-            CompletableFuture<List<DVector3C>> wheelPositionsFuture = new CompletableFuture<>();
-            CompletableFuture<List<float[]>> wheelRotationsFuture = new CompletableFuture<>();
-
-            Carmod.physicsEngine.executionQueue.add(() -> {
-                vehiclePositionFuture.complete(Carmod.physicsEngine.getBodyPosition(this));
-                vehicleRotationFuture.complete(Carmod.physicsEngine.getBodyRotation(this));
-                wheelPositionsFuture.complete(Carmod.physicsEngine.getWheelPositions(this));
-                wheelRotationsFuture.complete(Carmod.physicsEngine.getWheelRotations(this));
-            });
-
-            try {
-                DVector3C vehiclePosition = vehiclePositionFuture.get();
-                float[] vehicleRotation = vehicleRotationFuture.get();
-                List<DVector3C> wheelPositions = wheelPositionsFuture.get();
-                List<float[]> wheelRotations = wheelRotationsFuture.get();
-
-                setPosition(vehiclePosition.get0(), vehiclePosition.get1(), vehiclePosition.get2());
-                setRotationMatrix(vehicleRotation);
-                setWheelPositions(wheelPositions);
-                setWheelRotations(wheelRotations);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
+//            CompletableFuture<DVector3C> vehiclePositionFuture = new CompletableFuture<>();
+//            CompletableFuture<float[]> vehicleRotationFuture = new CompletableFuture<>();
+//            CompletableFuture<List<DVector3C>> wheelPositionsFuture = new CompletableFuture<>();
+//            CompletableFuture<List<float[]>> wheelRotationsFuture = new CompletableFuture<>();
+//
+//            Carmod.physicsEngine.executionQueue.add(() -> {
+//                vehiclePositionFuture.complete(Carmod.physicsEngine.getBodyPosition(this));
+//                vehicleRotationFuture.complete(Carmod.physicsEngine.getBodyRotation(this));
+//                wheelPositionsFuture.complete(Carmod.physicsEngine.getWheelPositions(this));
+//                wheelRotationsFuture.complete(Carmod.physicsEngine.getWheelRotations(this));
+//            });
+//
+//            try {
+//                DVector3C vehiclePosition = vehiclePositionFuture.get();
+//                float[] vehicleRotation = vehicleRotationFuture.get();
+//                List<DVector3C> wheelPositions = wheelPositionsFuture.get();
+//                List<float[]> wheelRotations = wheelRotationsFuture.get();
+//
+//                setPosition(vehiclePosition.get0(), vehiclePosition.get1(), vehiclePosition.get2());
+//                setRotationMatrix(vehicleRotation);
+//                setWheelPositions(wheelPositions);
+//                setWheelRotations(wheelRotations);
+//            } catch (InterruptedException | ExecutionException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 

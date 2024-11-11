@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import ralf2oo2.carmod.Carmod;
 import ralf2oo2.carmod.CarmodClient;
 import ralf2oo2.carmod.PhysicsEngine;
+import ralf2oo2.carmod.physics.PhysicsObject;
 import ralf2oo2.carmod.util.Math;
 import ralf2oo2.carmod.util.Util;
 import ralf2oo2.carmod.client.render.DebugRenderer;
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Mixin(WorldRenderer.class)
 public class WorldRendererMixin {
     @Shadow private int entityRenderCooldown;
-    private final AtomicReference<Map<CarEntity, DBody[]>> collisionBodiesReference = new AtomicReference<>();
+    private final AtomicReference<Map<CarEntity, PhysicsObject>> physicsObjectsReference = new AtomicReference<>();
     private final AtomicReference<DRay> rayReference = new AtomicReference<>();
     private final AtomicReference<List<DVector3C>> hitPointsReference = new AtomicReference<>();
 
@@ -38,18 +39,18 @@ public class WorldRendererMixin {
             GL11.glDisable(GL11.GL_LIGHTING);
             PlayerEntity player = CarmodClient.getMc().player;
             Carmod.physicsEngine.executionQueue.add(() -> {
-                collisionBodiesReference.set(Carmod.physicsEngine.getCollisionBodies());
+                physicsObjectsReference.set(Carmod.physicsEngine.getPhysicsObjects());
                 hitPointsReference.set(PhysicsEngine.hitPoints);
                 if(Carmod.physicsEngine.ray != null){
                     rayReference.set((DRay) Carmod.physicsEngine.ray);
                 }
             });
-            if(collisionBodiesReference.get() != null && DebugRenderer.renderPhysics){
+            if(physicsObjectsReference.get() != null && DebugRenderer.renderPhysics){
                 GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
                 GL11.glColor3f(1f, 1f, 1f);
-                for (Map.Entry<CarEntity, DBody[]> entry : collisionBodiesReference.get().entrySet()) {
-                    for(int i = 0; i < entry.getValue().length; i++){
-                        Iterator<DGeom> iterator = entry.getValue()[i].getGeomIterator();
+                for (Map.Entry<CarEntity, PhysicsObject> entry : physicsObjectsReference.get().entrySet()) {
+                    for(int i = 0; i < entry.getValue().bodies.size(); i++){
+                        Iterator<DGeom> iterator = entry.getValue().bodies.get(i).getGeomIterator();
                         while (iterator.hasNext()) {
                             GL11.glPushMatrix();
                             DGeom geom = iterator.next();
