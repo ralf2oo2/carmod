@@ -73,16 +73,16 @@ public class Geometry {
     private int vbo;
     private int vao;
     private int[] ibos;
-    private int[] vertexCounts;
     private String name;
     private RenderwareBinaryStream geometryBinaryStream;
 
     //Geometry data
     private List<Material> materials;
     public RenderwareBinaryStream.GeometryExtension geometryExtension;
-    //private Map<Integer, List<RenderwareBinaryStream.Triangle>> trianglesByMaterial;
+    public float minX, maxX;
+    public float minY, maxY;
+    public float minZ, maxZ;
     List<Vertex>[] verticesByMaterial;
-    List<Integer>[] indexByMaterial;
 
     public Geometry(RenderwareBinaryStream geometryBinaryStream){
         this.geometryBinaryStream = geometryBinaryStream;
@@ -215,6 +215,7 @@ public class Geometry {
 
         }
         vertexBuffer.flip();
+        getModelBounds(vertexBuffer);
 
         // Bind and upload to vbo
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
@@ -269,6 +270,28 @@ public class Geometry {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
         GL20.glUseProgram(0);
+    }
+
+    private void getModelBounds(FloatBuffer vertexBuffer){
+        minX = minY = minZ = Float.POSITIVE_INFINITY;
+        maxX = maxY = maxZ = Float.NEGATIVE_INFINITY;
+
+        while (vertexBuffer.hasRemaining()) {
+            float x = vertexBuffer.get();
+            float y = vertexBuffer.get();
+            float z = vertexBuffer.get();
+
+            // Update bounds
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+
+            if (z < minZ) minZ = z;
+            if (z > maxZ) maxZ = z;
+        }
+        vertexBuffer.rewind();
     }
 
     private int calculateTotalVertices(){

@@ -84,14 +84,14 @@ public class PhysicsEngine implements Runnable{
         Car car = (Car)physicsObject;
         for(int i = 0; i < car.joints.size(); i++){
             if(car.joints.get(i).getData().equals("b")){
-                ((DHinge2Joint)car.joints.get(i)).setParamVel2(10.0 * moveForwards);
+                ((DHinge2Joint)car.joints.get(i)).setParamVel2(20.0 * moveForwards);
             }
             else{
-                double targetSteeringAngle = Math.toRadians(45 * -moveSideways);
+                double targetSteeringAngle = Math.toRadians(car.vehicle.vehicleHandling.steeringLock * -moveSideways);
                 double currentSteeringAngle = ((DHinge2Joint)car.joints.get(i)).getAngle1();
 
                 double angleError = targetSteeringAngle - currentSteeringAngle;
-                double gain = 1.0f;
+                double gain = 2.0f;
                 double maxSteeringForce = 10.0;
                 double steeringVelocity = angleError * gain;
                 ((DHinge2Joint)car.joints.get(i)).setParamVel(steeringVelocity);

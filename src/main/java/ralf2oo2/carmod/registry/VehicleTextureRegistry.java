@@ -32,7 +32,7 @@ public class VehicleTextureRegistry {
             }
         });
         // TODO: dont allow duplicate texture names
-        if(textureCount() == 0){
+        if(true){
             for(int i = 0; i < textureList.size(); i++){
                 RenderwareBinaryStream.StructTextureData textureData = BinaryStreamHelpers.getStructTextureData((RenderwareBinaryStream) textureList.get(i));
                 VehicleTextureRegistry.registerTexture(textureData);

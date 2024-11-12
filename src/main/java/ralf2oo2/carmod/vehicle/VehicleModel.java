@@ -79,6 +79,14 @@ public class VehicleModel {
         return frames;
     }
 
+    public float wheelSize(){
+        Optional<RenderwareBinaryStream.Frame> frame = getFrameByName("wheel");
+        if(!frame.isPresent()) return - 1;
+        Optional<Geometry> geometry = getFrameGeometry(frame.get());
+        if(!geometry.isPresent()) return - 1;
+        return ((geometry.get().maxZ - geometry.get().minZ) / 2f) * 0.35f;
+    }
+
     public void renderWheel(float brightness, PlayerEntity player){
         Optional<RenderwareBinaryStream.Frame> frame = getFrameByName("wheel");
         if(!frame.isPresent()) return;

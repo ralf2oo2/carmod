@@ -47,7 +47,10 @@ public class VehicleRegistry {
     }
 
     private void loadVehicleHandling(String path){
-        vehicleHandling = handlingReader.getVehicleHandling(path + "handling.cfg");
+        List<File> handlingFiles = FileSearcher.getFilesByName(new File(path).toPath(), "handling.cfg");
+        handlingFiles.forEach((handlingFile) -> {
+            vehicleHandling.addAll(handlingReader.getVehicleHandling(handlingFile.getPath()));
+        });
     }
 
     private void loadVehicleData(String path){
@@ -60,10 +63,17 @@ public class VehicleRegistry {
     public void loadCarCols(String path){
         File file = new File(path + "carcols.dat");
         if(!file.exists()){
-            Carmod.logger.info("carcols.dat not found, skipping...");
+            Carmod.logger.info("Main carcols.dat not found, skipping...");
         }
         else{
             carCols = carColsReader.getCarCols(file.getPath());
+            List<File> carColsFiles = FileSearcher.getFilesByName(new File(path).toPath(), "carcols.dat");
+            carColsFiles.forEach((carColsFile) -> {
+                if(!carColsFile.getPath().equals(file.getPath())){
+                    CarCols carCols1 = carColsReader.getCarCols(carColsFile.getPath());
+                    carCols.vehicleColors.addAll(carCols1.vehicleColors);
+                }
+            });
         }
     }
 
@@ -91,9 +101,15 @@ public class VehicleRegistry {
         }
         try {
             RenderwareBinaryStream dffStream = RenderwareBinaryStream.fromFile(dffFile.get().getPath());
-            vehicles.add(new Vehicle(vehicleData, dffStream));
+
+            Optional<VehicleHandling> handling = vehicleHandling.stream().filter(h -> h.name.equals(vehicleData.handlingId)).findAny();
+            if(!handling.isPresent()){
+                Carmod.logger.warn("Handling with ID '" + vehicleData.handlingId + "' not found");
+                return;
+            }
+            vehicles.add(new Vehicle(vehicleData, handling.get(), carCols, dffStream));
         } catch (IOException e) {
-            Carmod.logger.error("Failed to add vehicle: " + vehicleData.name);
+            Carmod.logger.warn("Failed to add vehicle: " + vehicleData.name);
         }
     }
 

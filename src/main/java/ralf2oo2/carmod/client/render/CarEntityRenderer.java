@@ -70,7 +70,7 @@ public class CarEntityRenderer extends EntityRenderer {
             GL11.glPushMatrix();
             Vec3d relativePos = Util.getRelativePos(player, Math.lerpVector(delta, carEntity.prevWheelPositions.get(i), carEntity.wheelPositions.get(i)), delta);
             GL11.glTranslatef((float)relativePos.x, (float)relativePos.y, (float)relativePos.z);
-
+            //GL11.glScalef(1f, vehicle.vehicleData.frontWheelsSize, vehicle.vehicleData.frontWheelsSize);
             Util.applyMatrix(Math.lerpMatrix(delta, carEntity.prevWheelRotations.get(i), carEntity.wheelRotations.get(i)));
             if(carEntity.wheelSides.get(i) == "left"){
                 GL11.glRotatef(-90f, 0f, 1f, 0f);

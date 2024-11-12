@@ -65,7 +65,7 @@ public class Car extends PhysicsObject{
         meshGeom.setBody(body);
         DMass mass = OdeHelper.createMass();
         RenderwareBinaryStream.ColBounds bounds = collisions.header().bounds();
-        mass.setBoxTotal(10f, bounds.max().z() - bounds.min().z(), bounds.max().x() - bounds.min().x(), bounds.max().y() - bounds.min().y());
+        mass.setBoxTotal(vehicle.vehicleHandling.mass, bounds.max().z() - bounds.min().z(), bounds.max().x() - bounds.min().x(), bounds.max().y() - bounds.min().y());
         body.setMass(mass);
     }
 
@@ -74,16 +74,17 @@ public class Car extends PhysicsObject{
 
         DMass wheelMass = OdeHelper.createMass();
         wheelMass.setCylinder(1, 1, 0.7, 0.3);
-        wheelMass.adjust(1f);
+        wheelMass.adjust(vehicle.vehicleHandling.mass / 4);
 
         for(int i = 0; i < wheelFrames.size(); i++){
+            boolean front = vehicle.vehicleModel.getFrameName(wheelFrames.get(i)).substring(7).startsWith("f");
             DBody wheelBody = OdeHelper.createBody(world);
             DQuaternion q = new DQuaternion();
             OdeMath.dQFromAxisAndAngle (q,0,1,0, java.lang.Math.PI*0.5);
             wheelBody.setQuaternion(q);
             wheelBody.setMass(wheelMass);
 
-            DGeom cylinder = OdeHelper.createCylinder(space, 0.3d, 0.2);
+            DGeom cylinder = OdeHelper.createCylinder(space, front ? vehicle.vehicleData.frontWheelsSize / 2f : vehicle.vehicleData.rearWheelsSize / 2f, 0.2);
             cylinder.setBody(wheelBody);
 
             Vector3f wheelOffset = vehicle.vehicleModel.getFrameOffset(wheelFrames.get(i));
@@ -91,8 +92,7 @@ public class Car extends PhysicsObject{
             float rotatedX = -wheelOffset.x;
             float rotatedZ = -wheelOffset.z;
 
-            float suspensionHeight = 0.3f;
-            wheelBody.setPosition(rotatedX + body.getPosition().get0(), (wheelOffset.y - suspensionHeight) + body.getPosition().get1(), rotatedZ + body.getPosition().get2());
+            wheelBody.setPosition(rotatedX + body.getPosition().get0(), (wheelOffset.y + vehicle.vehicleHandling.suspensionLowerLimit) + body.getPosition().get1(), rotatedZ + body.getPosition().get2());
 
             DHinge2Joint hingeJoint = OdeHelper.createHinge2Joint(world, null);
             hingeJoint.attach(body, wheelBody);
@@ -106,19 +106,21 @@ public class Car extends PhysicsObject{
             hingeJoint.setAnchor(a);
             hingeJoint.setAxes(0,1,0 ,-1, 0, 0);
             hingeJoint.setParamFMax2(0f);
-            hingeJoint.setParamFMax(50f);
+            hingeJoint.setParamFMax(vehicle.vehicleHandling.turnMass);
 
-            hingeJoint.setParamSuspensionERP(0.8f);
-            hingeJoint.setParamSuspensionCFM(0.14f);
+            hingeJoint.setParamSuspensionERP(1.8f);
+            hingeJoint.setParamSuspensionCFM(0.001f);
 
-            if(vehicle.vehicleModel.getFrameName(wheelFrames.get(i)).substring(7).startsWith("b")){
-                hingeJoint.setParamFMax2(50f);
+            if(!front){
+                hingeJoint.setParamFMax2(1000f);
                 hingeJoint.setParamLoStop(0);
                 hingeJoint.setParamHiStop(0);
                 hingeJoint.setData("b");
             }
             else {
                 hingeJoint.setData("f");
+                hingeJoint.setParamLoStop(Math.toRadians(-vehicle.vehicleHandling.steeringLock));
+                hingeJoint.setParamHiStop(Math.toRadians(vehicle.vehicleHandling.steeringLock));
             }
             bodies.add(wheelBody);
             joints.add(hingeJoint);
