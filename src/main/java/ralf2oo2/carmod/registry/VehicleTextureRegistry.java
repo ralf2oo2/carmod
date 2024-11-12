@@ -20,31 +20,23 @@ public class VehicleTextureRegistry {
     private static List<TxdTexture> txdTextures = new ArrayList<>();
     @EventListener
     public void registerVehicleTextures(TextureRegisterEvent event){
-        String path = FabricLoader.getInstance().getConfigDir() + "/";
-        loadTextureDictionary(path + "test.txd");
     }
     public static int textureCount(){
         return txdTextures.size();
     }
-    public void loadTextureDictionary(String path){
-
-        try {
-            RenderwareBinaryStream binaryStream = RenderwareBinaryStream.fromFile(path);
-            List textureList = new ArrayList<>();
-            ((RenderwareBinaryStream.ListWithHeader) binaryStream.body()).entries().forEach((entry) -> {
-                if(entry.code().name() == "TEXTURE_NATIVE"){
-                    textureList.add(entry);
-                }
-            });
-            // TODO: dont allow duplicate texture names
-            if(textureCount() == 0){
-                for(int i = 0; i < textureList.size(); i++){
-                    RenderwareBinaryStream.StructTextureData textureData = BinaryStreamHelpers.getStructTextureData((RenderwareBinaryStream) textureList.get(i));
-                    VehicleTextureRegistry.registerTexture(textureData);
-                }
+    public static void loadTextureDictionary(RenderwareBinaryStream txdStream){
+        List textureList = new ArrayList<>();
+        ((RenderwareBinaryStream.ListWithHeader) txdStream.body()).entries().forEach((entry) -> {
+            if(entry.code().name() == "TEXTURE_NATIVE"){
+                textureList.add(entry);
             }
-        } catch (IOException e) {
-            System.out.println("Couldnt load TextureDictionary at " + path);
+        });
+        // TODO: dont allow duplicate texture names
+        if(textureCount() == 0){
+            for(int i = 0; i < textureList.size(); i++){
+                RenderwareBinaryStream.StructTextureData textureData = BinaryStreamHelpers.getStructTextureData((RenderwareBinaryStream) textureList.get(i));
+                VehicleTextureRegistry.registerTexture(textureData);
+            }
         }
     }
 

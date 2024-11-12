@@ -3,32 +3,21 @@ package ralf2oo2.carmod.vehicle;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import ralf2oo2.carmod.util.RenderwareBinaryStream;
+import ralf2oo2.carmod.vehicle.data.VehicleData;
 
 import java.io.IOException;
 
 public class Vehicle {
     private RenderwareBinaryStream binaryStream;
+    public VehicleData vehicleData;
     public VehicleModel vehicleModel;
     public VehicleCollisions vehicleCollisions;
-    public String name;
-    public Vehicle(RenderwareBinaryStream binaryStream, String name){
+    public Vehicle(VehicleData vehicleData, RenderwareBinaryStream binaryStream){
+        this.vehicleData = vehicleData;
         this.binaryStream = binaryStream;
-        this.name = name;
         if(FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT){
             this.vehicleModel = new VehicleModel(binaryStream);
         }
         this.vehicleCollisions = new VehicleCollisions(binaryStream);
-    }
-    public Vehicle(String path, String name){
-        try {
-            this.binaryStream = RenderwareBinaryStream.fromFile(path + name + ".dff");
-            this.name = name;
-            if(FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT){
-                this.vehicleModel = new VehicleModel(binaryStream);
-            }
-            this.vehicleCollisions = new VehicleCollisions(binaryStream);
-        } catch (IOException e) {
-            System.out.println("Failed to load model " + name + "dff");
-        }
     }
 }

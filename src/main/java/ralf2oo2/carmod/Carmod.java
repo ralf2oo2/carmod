@@ -1,6 +1,8 @@
 package ralf2oo2.carmod;
 
 import com.matthewperiut.retrocommands.api.CommandRegistry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ralf2oo2.carmod.command.DebugCommand;
 
 import java.util.concurrent.Executors;
@@ -9,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Carmod {
     public static PhysicsEngine physicsEngine;
+    public static final Logger logger = LogManager.getLogger(Carmod.class);
     public Carmod(){
         physicsEngine = new PhysicsEngine();
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
