@@ -1,6 +1,7 @@
 package ralf2oo2.carmod.util;
 
 import org.lwjgl.util.Color;
+import ralf2oo2.carmod.Carmod;
 import ralf2oo2.carmod.vehicle.data.CarCols;
 import ralf2oo2.carmod.vehicle.data.VehicleColors;
 
@@ -8,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CarColsReader {
     public CarCols getCarCols(String filePath){
@@ -52,7 +55,7 @@ public class CarColsReader {
                             int blue = Integer.parseInt(parts[2].trim());
                             carCols.colors.add( new Color(red, green, blue));
                         } catch (NumberFormatException e) {
-                            System.err.println("Skipping invalid color line: " + line);
+                            Carmod.logger.error("Skipping invalid color line: " + line + " : " + e.getMessage());
                         }
                     }
                 }
@@ -60,7 +63,20 @@ public class CarColsReader {
                     if(parts.length >= 3){
                         VehicleColors vehicleColors = new VehicleColors();
                         vehicleColors.name = parts[0].trim();
-                        // TODO: load color indexes in array
+
+                        int[] indexes = new int[parts.length - 1];
+
+                        try {
+                            for (int i = 1; i < parts.length; i++) {
+                                indexes[i - 1] = Integer.parseInt(parts[i].trim());
+                            }
+                        } catch (NumberFormatException e) {
+                            Carmod.logger.error("Skipping invalid Carcol line: " + line  + " : " + e.getMessage());
+                            continue;
+                        }
+                        vehicleColors.colIndexes = indexes;
+                        if(readingCar4Section) vehicleColors.car4 = true;
+                        carCols.vehicleColors.add(vehicleColors);
                     }
                 }
             }

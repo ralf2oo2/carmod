@@ -32,8 +32,8 @@ public class VehicleDataReader {
                     vehicleData.animation = parts[6].trim().equals("null") ? null : parts[6].trim();
                     vehicleData.vClass = parts[7].trim();
                     vehicleData.frequency = Integer.parseInt(parts[8].trim());
-                    vehicleData.flags = Integer.parseInt(parts[9].trim(), 16);
-                    vehicleData.comprules = Integer.parseInt(parts[10].trim(), 16);
+                    vehicleData.flags = (int)Long.parseLong(parts[9].trim(), 16);
+                    vehicleData.comprules = (int)Long.parseLong(parts[10].trim(), 16);
                     vehicleData.wheelModelId = Integer.parseInt(parts[11].trim());
                     vehicleData.frontWheelsSize = Float.parseFloat(parts[12].trim());
                     vehicleData.rearWheelsSize = Float.parseFloat(parts[13].trim());

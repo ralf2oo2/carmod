@@ -5,11 +5,11 @@ import net.mine_diver.unsafeevents.listener.EventListener;
 import net.modificationstation.stationapi.api.client.event.texture.TextureRegisterEvent;
 import ralf2oo2.carmod.Carmod;
 import ralf2oo2.carmod.physics.Car;
-import ralf2oo2.carmod.util.FileSearcher;
-import ralf2oo2.carmod.util.RenderwareBinaryStream;
-import ralf2oo2.carmod.util.VehicleDataReader;
+import ralf2oo2.carmod.util.*;
 import ralf2oo2.carmod.vehicle.Vehicle;
+import ralf2oo2.carmod.vehicle.data.CarCols;
 import ralf2oo2.carmod.vehicle.data.VehicleData;
+import ralf2oo2.carmod.vehicle.data.handling.VehicleHandling;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,20 +19,35 @@ import java.util.Optional;
 
 public class VehicleRegistry {
     private final VehicleDataReader vehicleDataReader = new VehicleDataReader();
+    private final CarColsReader carColsReader = new CarColsReader();
+    private final HandlingReader handlingReader = new HandlingReader();
     private List<File> dffFiles = new ArrayList<>();
     private List<File> txdFiles = new ArrayList<>();
     private List<VehicleData> vehicleData = new ArrayList<>();
+    private List<VehicleHandling> vehicleHandling = new ArrayList<>();
+    public static CarCols carCols;
     public static List<Vehicle> vehicles = new ArrayList<>();
 
     @EventListener
     public void registerVehicles(TextureRegisterEvent event){
         String path = FabricLoader.getInstance().getConfigDir() + "/carmod/";
+        File configDir = new File(path);
+        if(!configDir.exists()){
+            configDir.mkdirs();
+            Carmod.logger.info("Successfully created config dir");
+        }
+
         dffFiles = FileSearcher.getFilesByExtension(new File(path).toPath(), "dff");
         txdFiles = FileSearcher.getFilesByExtension(new File(path).toPath(), "txd");
         loadVehicleData(path);
+        loadVehicleHandling(path);
+        loadCarCols(path);
         registerVehicles();
-
         System.out.println(vehicleData);
+    }
+
+    private void loadVehicleHandling(String path){
+        vehicleHandling = handlingReader.getVehicleHandling(path + "handling.cfg");
     }
 
     private void loadVehicleData(String path){
@@ -41,6 +56,17 @@ public class VehicleRegistry {
             vehicleData.addAll(vehicleDataReader.getVehicles(vehicleDataFile.getPath()));
         });
     }
+
+    public void loadCarCols(String path){
+        File file = new File(path + "carcols.dat");
+        if(!file.exists()){
+            Carmod.logger.info("carcols.dat not found, skipping...");
+        }
+        else{
+            carCols = carColsReader.getCarCols(file.getPath());
+        }
+    }
+
     private void registerVehicles(){
         vehicleData.forEach(this::registerVehicle);
     }
